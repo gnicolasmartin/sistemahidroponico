@@ -255,7 +255,7 @@ firestore_err_t firestore_add_document(char *pcCollectionId, char *pcDocumentId,
             printf("HTTP path: %s", stCtx.stHttpconfig.path);
             stCtx.pstHttpClient = esp_http_client_init(&stCtx.stHttpconfig);
             esp_http_client_set_method(stCtx.pstHttpClient, HTTP_METHOD_POST);
-            esp_http_client_set_header(stCtx.pstHttpClient, "Content-Type", "application/xml");
+            esp_http_client_set_header(stCtx.pstHttpClient, "Content-Type", "application/json");
             esp_http_client_set_post_field(stCtx.pstHttpClient, pcDocument, strlen(pcDocument));
         
             if(ESP_OK == esp_http_client_perform(stCtx.pstHttpClient))

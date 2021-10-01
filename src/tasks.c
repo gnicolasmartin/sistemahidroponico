@@ -12,6 +12,7 @@
 
 #include "tasks.h"
 #include "firestore.h"
+#include "filesystem.h"
 
 //Estructura de entradas antirrebote
 extern antirrebote_t entradas_antirrebote[CANTIDAD_ANTIRREBOTE];
@@ -124,34 +125,44 @@ void firestore_task(void *pvParameter)
     
     while(1)
     {
-
         if(entradas_antirrebote[0].level)   // 3V3 
         {
             gpio_set_level(GPIO_TEST_LED,0);
-
             //*****************************************************************************//   FUNCIONA OK
             //                              CODIGO GET DOC FIRESTORE                       //
-            u32DocLength = snprintf(tcDoc, sizeof(tcDoc), " ");
+            // u32DocLength = snprintf(tcDoc, sizeof(tcDoc), " ");
 
-            firestore_err_t FIRESTORE_STATUS= firestore_get_document(PLANTS_COLLECTION_ID, PLANT_DOCUMENT_ID, tcDoc, &u32DocLength);
+            // firestore_err_t FIRESTORE_STATUS= firestore_get_document(PLANTS_COLLECTION_ID, PLANT_DOCUMENT_ID, tcDoc, &u32DocLength);
 
-            if(FIRESTORE_STATUS == FIRESTORE_OK)
-            {
-                printf("Document got successfully\n");
-                printf("\n %s \n", tcDoc);
-            }
-            else
-            {
-                printf("ERROR: Couldn't get document\n");
-            }
-            //*****************************************************************************//
-
-            /* UPDATE JSON*/
+            // if(FIRESTORE_STATUS == FIRESTORE_OK)
+            // {
+            //     printf("Document got successfully\n");
+            //     //printf("\n %s \n", tcDoc);
+            // }
+            // else
+            // {
+            //     printf("ERROR: Couldn't get document\n");
+            // }
+            // *****************************************************************************//
+            // /* SAVING JSON AS FILE */
+            // FILE* f = fopen("doc.json", "w");    // open the file for writing
+            // if (f != NULL)                       // check for success
+            // {
+            //     fprintf(f, "%s", tcDoc);
+            //     fclose(f);                       // close the file
+            //     //*tcDoc = NULL;                        // set file handle to null since f is no longer valid
+            // }
+            init_fs();
+            // /* UPDATE JSON*/
+            // char valor[100]= "Lechugitas";
+            // int value = replace_value(tcDoc, "name", valor);
             
-            
+            // printf("Ret_val: %d\n", value);
+            // printf("String leída: %s\n", valor);
+
             //*****************************************************************************//   FUNCIONA OK
             //                              CODIGO UPDATE FIRESTORE                        //
-            int value= rand();
+            // int value= rand();
         
             /* Update document in firestore */
             
@@ -232,13 +243,12 @@ void firestore_task(void *pvParameter)
             //     printf("ERROR: Couldn't add document\n");
             // }
             //*****************************************************************************//
-
         }
         else                                // GND
         {
+            //printf("\nTURN OFF LED\n);
             gpio_set_level(GPIO_TEST_LED,1);
         }
-        
 
         vTaskDelay(FIRESTORE_PERIOD_MS / portTICK_PERIOD_MS);
     }

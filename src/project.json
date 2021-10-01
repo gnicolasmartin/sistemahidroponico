@@ -1,0 +1,28 @@
+{
+  "name": "projects/lively-oxide-241518/databases/(default)/documents/Plants/4SMhKaRUwBpVHXWFLNkN",
+  "fields": {
+    "ph": {
+      "doubleValue": 6.4
+    },
+    "name": {
+      "stringValue": "Lechuga"
+		}, 
+    "time": {
+      "doubleValue": 2
+    },
+    "ec": {
+      "doubleValue": 1600
+    },
+    "temperature": {
+      "doubleValue": 18
+    },
+    "humidity": {
+      "doubleValue": 60
+    },
+    "img": {
+      "stringValue": "https://firebasestorage.googleapis.com/v0/b/lively-oxide-241518.appspot.com/o/Plants%2Facelga.png?alt=media&token=8dc65dc4-87f2-4286-b627-8fbe46be0334"
+    }
+  },
+  "createTime": "2021-07-09T15:25:46.146009Z",
+  "updateTime": "2021-07-09T15:25:46.146.146.146.146009Z"
+}
