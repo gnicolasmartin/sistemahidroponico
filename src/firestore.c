@@ -406,3 +406,92 @@ esp_err_t firestore_http_event_handler(esp_http_client_event_t *pstEvent)
 
   return s32RetVal;
 }
+
+//***************************************** EJEMPLOS DE LLAMADO A FUNCIONES *****************************************
+/**
+ * @brief VARIABLES COMUNES A TODOS LOS EJEMPLOS
+ * 
+ */
+// static uint32_t u32DocLength;
+// static char tcDoc[FIRESTORE_DOC_MAX_SIZE];
+// firestore_err_t FIRESTORE_STATUS
+// u32DocLength = snprintf(tcDoc, sizeof(tcDoc), " ");
+
+/**
+ * @brief GET DOCUMENT FROM FIRESTORE
+ * 
+ */
+// FIRESTORE_STATUS= firestore_get_document(PLANTS_COLLECTION_ID, PLANT_DOCUMENT_ID, tcDoc, &u32DocLength);
+
+// if(FIRESTORE_STATUS == FIRESTORE_OK)
+// {
+//     printf("Document got successfully\n");
+//     // printf("\n %s \n", tcDoc);
+// }
+// else
+// {
+//     printf("ERROR: Couldn't get document\n");
+// }
+
+/**
+ * @brief UPDATE DOCUMENT FROM FIRESTORE
+ * 
+ */
+// FIRESTORE_STATUS= firestore_update_document(ESP_COLLECTION_ID, ESP_DOCUMENT_ID, tcDoc, &u32DocLength);
+
+// if(FIRESTORE_STATUS == FIRESTORE_OK)
+// {
+//     printf("Document updated successfully\n");
+// }
+// else
+// {
+//     printf("ERROR: Couldn't update document\n");
+// }
+
+/**
+ * @brief GET COLLECTION FROM FIRESTORE
+ * 
+ */
+// FIRESTORE_STATUS= firestore_get_collection(FIRESTORE_COL_ID, tcDoc, &u32DocLength);
+
+// if(FIRESTORE_STATUS == FIRESTORE_OK)
+// {
+//     printf("Collection got successfully\n");
+//     printf("\n %s \n", tcDoc);
+// }
+// else
+// {
+//     printf("ERROR: Couldn't get collection\n");
+// }
+
+/**
+ * @brief DELETE DOCUMENT FROM FIRESTORE
+ * 
+ */
+// firestore_err_t FIRESTORE_STATUS= firestore_delete_document(FIRESTORE_COL_ID, FIRESTORE_DOC_ID);
+
+// if(FIRESTORE_STATUS == FIRESTORE_OK)
+// {
+//     printf("Document deleted successfully\n");
+// }
+// else
+// {
+//     printf("ERROR: Couldn't delet document\n");
+// }
+
+/**
+ * @brief ADD DOCUMENT FROM FIRESTORE (MUST EXIST THE COLLECTION)
+ * 
+ */
+// firestore_err_t FIRESTORE_STATUS= firestore_add_document(FIRESTORE_COL_ID, FIRESTORE_DOC_ID, tcDoc, &u32DocLength);
+
+// if(FIRESTORE_STATUS == FIRESTORE_OK)
+// {
+//     printf("Document added successfully\n");
+// }
+// else
+// {
+//     printf("ERROR: Couldn't add document\n");
+// }
+
+//*******************************************************************************************************************
