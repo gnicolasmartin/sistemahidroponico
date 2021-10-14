@@ -12,6 +12,14 @@
 
 #include "main.h"
 
+esp_vfs_spiffs_conf_t conf = 
+{
+    .base_path = "/spiffs",
+    .partition_label = NULL,
+    .max_files = 5,
+    .format_if_mount_failed = true
+};
+
 void app_main()
 {
     //Se llama a las funciones de inicialización
@@ -19,6 +27,7 @@ void app_main()
     init_gpio();
     init_wifi();
     wifi_wait();
+    init_fs(&conf);
 
     //Se crean las tareas a despachar por el scheduler
     //xTaskCreate(&toggle_led, "toggle_led", 10240, NULL, 3, NULL);
@@ -29,6 +38,9 @@ void app_main()
     //xTaskCreate(&tarea3, "tarea3", 1024, NULL, 3, NULL);
     //xTaskCreate(&tarea4, "tarea4", 1024, NULL, 4, NULL);
 
+    // All done, unmount partition and disable SPIFFS
+    // esp_vfs_spiffs_unregister(conf.partition_label);
+    // printf("SPIFFS unmounted\n");
 
     //vTaskStartScheduler();
 }

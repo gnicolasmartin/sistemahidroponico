@@ -121,132 +121,80 @@ void firestore_task(void *pvParameter)
     static uint32_t u32DocLength;
     static char tcDoc[FIRESTORE_DOC_MAX_SIZE];
 
-    init_firestore(); // QUIZAS HAY QUE REVALIDAR NUESTRAS CREDENCIALES PARA USAR EL SERVICIO. SINO HAY QUE HACERLO MOVER ESTA FUNCION AL COMIENZO DEL MAIN
+    init_firestore();
     
     while(1)
     {
         if(entradas_antirrebote[0].level)   // 3V3 
         {
+            // Apagamos el LED
             gpio_set_level(GPIO_TEST_LED,0);
-            //*****************************************************************************//   FUNCIONA OK
-            //                              CODIGO GET DOC FIRESTORE                       //
-            // u32DocLength = snprintf(tcDoc, sizeof(tcDoc), " ");
-
-            // firestore_err_t FIRESTORE_STATUS= firestore_get_document(PLANTS_COLLECTION_ID, PLANT_DOCUMENT_ID, tcDoc, &u32DocLength);
-
-            // if(FIRESTORE_STATUS == FIRESTORE_OK)
-            // {
-            //     printf("Document got successfully\n");
-            //     //printf("\n %s \n", tcDoc);
-            // }
-            // else
-            // {
-            //     printf("ERROR: Couldn't get document\n");
-            // }
-            // *****************************************************************************//
-            // /* SAVING JSON AS FILE */
-            // FILE* f = fopen("doc.json", "w");    // open the file for writing
-            // if (f != NULL)                       // check for success
-            // {
-            //     fprintf(f, "%s", tcDoc);
-            //     fclose(f);                       // close the file
-            //     //*tcDoc = NULL;                        // set file handle to null since f is no longer valid
-            // }
-            init_fs();
-            // /* UPDATE JSON*/
-            // char valor[100]= "Lechugitas";
-            // int value = replace_value(tcDoc, "name", valor);
             
-            // printf("Ret_val: %d\n", value);
-            // printf("String leída: %s\n", valor);
+            u32DocLength = snprintf(tcDoc, sizeof(tcDoc), " ");
 
-            //*****************************************************************************//   FUNCIONA OK
-            //                              CODIGO UPDATE FIRESTORE                        //
-            // int value= rand();
-        
-            /* Update document in firestore */
+            // Leemos de firestore un documento
+            firestore_err_t FIRESTORE_STATUS= firestore_get_document(PLANTS_COLLECTION_ID, PLANT_DOCUMENT_ID, tcDoc, &u32DocLength);
+
+            // Chequeamos si hay error
+            if(FIRESTORE_STATUS != FIRESTORE_OK)
+            {
+                printf("ERROR: Couldn't get document\n");
+            }
+
+            // Creamos un archivo JSON para respaldar el documento leido de firestore
+            FILE* f = fopen("/spiffs/document.json", "w");    
+
+            // Chequeamos si hay error
+            if (f != NULL)                                   
+            {
+                // Guardamos el JSON en un archivo
+                fprintf(f, "%s", tcDoc);
+                fputc('\0', f);
+                fclose(f); 
+            }
+
+            // Actualizamos el valor de un campo
+            char valor[100]; 
+            itoa(rand(), valor, 10);
+            int value = replace_value("/spiffs/document.json", "temperature", valor);
+
+            // Chequeamos si hay error
+            if(value == -1)
+            {
+                printf("ERROR: Couldn´t replace value in JSON file\n");
+            }
+
+            // value = search_value("/spiffs/document.json", "temperature", valor);
+
+            // if(value == -1)
+            // {
+            //      printf("ERROR: Couldn´t search value in JSON file\n");
+            // }
+
+            // printf("Leimos la key name y es: %s\n", valor);
+
+            // Abrimos el JSON con el campo actualizado
+            f = fopen("/spiffs/document.json", "r");
+
+            // Pasamos el contenido del JSON a una variable
+            fread(tcDoc, FIRESTORE_DOC_MAX_SIZE, 1, f);
+
+            // Cerramos archivo JSON de respaldo
+            fclose(f);
+
+            // Actualizamos el documento en firestore
+            FIRESTORE_STATUS= firestore_update_document(ESP_COLLECTION_ID, ESP_DOCUMENT_ID, tcDoc, &u32DocLength);
             
-            /*
-            u32DocLength = snprintf(tcDoc, sizeof(tcDoc),   "{"                           \
-                                                              "\"fields\": {"             \
-                                                                  "\"%s\": {"             \
-                                                                  "\"integerValue\": %d"  \
-                                                                "},"                      \
-                                                                  "\"%s\": {"             \
-                                                                  "\"integerValue\": %d"  \
-                                                                "},"                      \
-                                                                  "\"%s\": {"             \
-                                                                  "\"integerValue\": %d"  \
-                                                                "},"                      \
-                                                              "}"                         \
-                                                            "}", ESP_DOCUMENT_FIELD, value, "PH", value, "EC", value);
-            */
-
-            // int FIRESTORE_STATUS= firestore_update_document(ESP_COLLECTION_ID, ESP_DOCUMENT_ID, tcDoc, &u32DocLength);
+            // Chequeamos si hay error
+            if(FIRESTORE_STATUS != FIRESTORE_OK)
+            {
+                printf("ERROR: Couldn't update document\n");
+            }
             
-            // if(FIRESTORE_STATUS == FIRESTORE_OK)
-            // {
-            //     printf("Document updated successfully\n");
-            // }
-            // else
-            // {
-            //     printf("ERROR: Couldn't update document\n");
-            // }
-            //*****************************************************************************//
-
-            
-            //*****************************************************************************//   FUNCIONA OK
-            //                              CODIGO GET COL FIRESTORE                       //
-            // u32DocLength = snprintf(tcDoc, sizeof(tcDoc), " ");
-
-            // firestore_err_t FIRESTORE_STATUS= firestore_get_collection(FIRESTORE_COL_ID, tcDoc, &u32DocLength);
-
-            // if(FIRESTORE_STATUS == FIRESTORE_OK)
-            // {
-            //     printf("Collection got successfully\n");
-            //     printf("\n %s \n", tcDoc);
-            // }
-            // else
-            // {
-            //     printf("ERROR: Couldn't get collection\n");
-            // }
-            //*****************************************************************************//
-
-            //*****************************************************************************// FUNCIONA OK
-            //                     CODIGO DELETE DOCUMENT FIRESTORE                        //
-            // firestore_err_t FIRESTORE_STATUS= firestore_delete_document(FIRESTORE_COL_ID, FIRESTORE_DOC_ID);
-
-            // if(FIRESTORE_STATUS == FIRESTORE_OK)
-            // {
-            //     printf("Document deleted successfully\n");
-            // }
-            // else
-            // {
-            //     printf("ERROR: Couldn't delet document\n");
-            // }
-            //*****************************************************************************//
-
-            //*****************************************************************************// FUNCIONA OK
-            //                          CODIGO ADD DOCUMENT FIRESTORE                      // DEBE EXISTIR LA COLECCION, PERO NO EL DOCUMENTO
-            // int value= rand();
-
-            // u32DocLength = snprintf(tcDoc, sizeof(tcDoc), "{\"fields\":{\"%s\":{\"integerValue\":%d}}}", FIRESTORE_DOC_FIELD , value);
-
-            // firestore_err_t FIRESTORE_STATUS= firestore_add_document(FIRESTORE_COL_ID, FIRESTORE_DOC_ID, tcDoc, &u32DocLength);
-
-            // if(FIRESTORE_STATUS == FIRESTORE_OK)
-            // {
-            //     printf("Document added successfully\n");
-            // }
-            // else
-            // {
-            //     printf("ERROR: Couldn't add document\n");
-            // }
-            //*****************************************************************************//
         }
         else                                // GND
         {
-            //printf("\nTURN OFF LED\n);
+            // Encendemos el LED
             gpio_set_level(GPIO_TEST_LED,1);
         }
 
