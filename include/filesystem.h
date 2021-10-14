@@ -4,4 +4,4 @@
 #include <sys/stat.h>
 #include "esp_spiffs.h"
 
-void init_fs(void);
+void init_fs(esp_vfs_spiffs_conf_t* conf);
