@@ -27,9 +27,19 @@ void init_gpio(void)
     gpio_pad_select_gpio(GPIO_PULSADOR_IZQUIERDO);
     gpio_set_direction(GPIO_PULSADOR_IZQUIERDO,GPIO_MODE_INPUT);
 
+    gpio_pad_select_gpio(GPIO_PULSADOR_ARRIBA);
+    gpio_set_direction(GPIO_PULSADOR_ARRIBA,GPIO_MODE_INPUT);
+
+    gpio_pad_select_gpio(GPIO_PULSADOR_ABAJO);
+    gpio_set_direction(GPIO_PULSADOR_ABAJO,GPIO_MODE_INPUT);
+
     //Inicialización de LED de prueba
     gpio_pad_select_gpio(GPIO_TEST_LED);
     gpio_set_direction(GPIO_TEST_LED,GPIO_MODE_OUTPUT);
+
+    //Inicialización de LED de prueba
+    gpio_pad_select_gpio(19);
+    gpio_set_direction(19,GPIO_MODE_OUTPUT);
 
     //Inicializa las estructuras antirrebote
     init_antirrebote();

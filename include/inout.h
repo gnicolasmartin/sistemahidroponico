@@ -4,7 +4,9 @@
 #define GPIO_TEST_LED 2
 #define GPIO_PULSADOR_IZQUIERDO 13
 #define GPIO_PULSADOR_DERECHO 12
-#define CANTIDAD_ANTIRREBOTE 4
+#define CANTIDAD_ANTIRREBOTE 5
+#define GPIO_PULSADOR_ARRIBA 19
+#define GPIO_PULSADOR_ABAJO 18
 
 void init_antirrebote(void);
 void init_gpio(void);

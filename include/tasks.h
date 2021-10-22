@@ -1,16 +1,16 @@
-// INCLUDES
 #include "inout.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "json.h"
+#include "adc_utils.h"
+#include "lcd_i2c.h"
+#include <string.h>
 
-// DEFINES
-#define READPORTS_PERIOD_MS 1
-#define TOGGLED_PERIOD_MS   1000
-#define FIRESTORE_PERIOD_MS 1000
+#define MAX_PAGINAS 3
 
-// PROTOTYPES
 void toggle_led(void *pvParameter);
+void toggle_pin(void *pvParameter);
 void leer_entradas(void *pvParameter);
-void firestore_task(void *pvParameter);
-void idle(void *pvParameter);
+void leer_adc_ph(void *pvParameter);
+void leer_adc_ec(void *pvParameter);
+void navegar_menu(void *pvParameter);
+void control_lcd(void *pvParameter);
