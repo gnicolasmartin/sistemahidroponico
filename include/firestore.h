@@ -1,3 +1,15 @@
+/////////////////////////////////////////////////////////////////////////////////////////
+//  Proyecto: Sistema Hidropónico Para Hogares                                         // 
+//  Alumnos: *Lucia Sucunza                                                            //
+//           *Nicolas Gomez                                                            //
+//           *Santiago Laborde                                                         //
+//                                                                                     // 
+//  Archivo: firestore.h                                                               // 
+//  Descripción: Archivo de cabecera para el manejo de firestore                       //
+//                                                                                     // 
+/////////////////////////////////////////////////////////////////////////////////////////
+
+// INCLUDES
 #include <stdint.h>
 #include <string.h>
 #include "esp_http_client.h"
@@ -104,6 +116,12 @@ typedef struct
 
 // DEFINES
 #define FIRESTORE_DOC_MAX_SIZE 2048
+#define PLANTS_COLLECTION_ID    "Plants"
+#define PLANT_DOCUMENT_ID       "4SMhKaRUwBpVHXWFLNkN"
+#define PLANT_DOCUMENT_FIELD    "Temperatura"
+#define ESP_COLLECTION_ID       "Esp"
+#define ESP_DOCUMENT_ID         "Lechuga"
+#define ESP_DOCUMENT_FIELD      "Temperatura"
 
 // PROTOTYPES
 firestore_err_t init_firestore(void);

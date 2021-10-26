@@ -1,24 +1,19 @@
-// /////////////////////////////////////////////////////////////////////////////////////////
-// //  Proyecto: Sistema Hidropónico Para Hogares                                         // 
-// //  Alumnos: *Lucia Sucunza                                                            //
-// //           *Nicolas Gomez                                                            //
-// //           *Santiago Laborde                                                         //                          
-// //                                                                                     // 
-// //  Archivo: firestore.c                                                               // 
-// //  Descripción: Contiene todas las funciones asociadas al manejo de la base de datos  //
-// //               de firestore                                                          //
-// //                                                                                     // 
-// /////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+//  Proyecto: Sistema Hidropónico Para Hogares                                         // 
+//  Alumnos: *Lucia Sucunza                                                            //
+//           *Nicolas Gomez                                                            //
+//           *Santiago Laborde                                                         //                          
+//                                                                                     // 
+//  Archivo: firestore.c                                                               // 
+//  Descripción: Contiene todas las funciones asociadas al manejo de la base de datos  //
+//               de firestore                                                          //
+//                                                                                     // 
+/////////////////////////////////////////////////////////////////////////////////////////
 
 #include "firestore.h"
 
 static firestore_ctx_t stCtx;
 
-/**
- * @brief 
- * 
- * @return firestore_err_t 
- */
 firestore_err_t init_firestore(void)
 {
     /* Initialize the firestore_ctx_t struct*/
@@ -34,15 +29,6 @@ firestore_err_t init_firestore(void)
     return FIRESTORE_OK;
 }
 
-/**
- * @brief 
- * 
- * @param pcCollectionId 
- * @param pcDocumentId 
- * @param pcDocument 
- * @param pu32DocumentLen 
- * @return firestore_err_t 
- */
 firestore_err_t firestore_update_document(char *pcCollectionId, char *pcDocumentId, char *pcDocument, uint32_t *pu32DocumentLen)
 {
     int16_t s16HttpCode;
@@ -102,15 +88,6 @@ firestore_err_t firestore_update_document(char *pcCollectionId, char *pcDocument
     return eRetVal;
 }
 
-/**
- * @brief 
- * 
- * @param pcCollectionId 
- * @param pcDocumentId 
- * @param ppcDocument 
- * @param pu32DocumentLen 
- * @return firestore_err_t 
- */
 firestore_err_t firestore_get_document(char *pcCollectionId, char *pcDocumentId, char *ppcDocument, uint32_t *pu32DocumentLen)
 {
     int16_t s16HttpCode;
@@ -167,14 +144,6 @@ firestore_err_t firestore_get_document(char *pcCollectionId, char *pcDocumentId,
     return eRetVal;
 }
 
-/**
- * @brief 
- * 
- * @param pcCollectionId 
- * @param ppcDocs 
- * @param pu32DocsLen 
- * @return firestore_err_t 
- */
 firestore_err_t firestore_get_collection(char *pcCollectionId, char *ppcDocs, uint32_t *pu32DocsLen)
 {
     int16_t s16HttpCode;
@@ -230,15 +199,6 @@ firestore_err_t firestore_get_collection(char *pcCollectionId, char *ppcDocs, ui
     return eRetVal;
 }
 
-/**
- * @brief 
- * 
- * @param pcCollectionId 
- * @param pcDocumentId 
- * @param pcDocument 
- * @param pu32DocumentLen 
- * @return firestore_err_t 
- */
 firestore_err_t firestore_add_document(char *pcCollectionId, char *pcDocumentId, char *pcDocument, uint32_t *pu32DocumentLen)
 {
     int16_t s16HttpCode;
@@ -295,13 +255,6 @@ firestore_err_t firestore_add_document(char *pcCollectionId, char *pcDocumentId,
     return eRetVal;
 }
 
-/**
- * @brief 
- * 
- * @param pcCollectionId 
- * @param pcDocumentId 
- * @return firestore_err_t 
- */
 firestore_err_t firestore_delete_document(char *pcCollectionId, char *pcDocumentId)
 {
     int16_t s16HttpCode;
