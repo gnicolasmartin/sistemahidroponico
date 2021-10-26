@@ -1,5 +1,18 @@
+/////////////////////////////////////////////////////////////////////////////////////////
+//  Proyecto: Sistema Hidropónico Para Hogares                                         // 
+//  Alumnos: *Lucia Sucunza                                                            //
+//           *Nicolas Gomez                                                            //
+//           *Santiago Laborde                                                         //
+//                                                                                     // 
+//  Archivo: gpio.h                                                                    // 
+//  Descripción: Archivo de cabecera para el manejo de GPIOs                           //
+//                                                                                     // 
+/////////////////////////////////////////////////////////////////////////////////////////
+
+// INCLUDES
 #include "driver/gpio.h"
 
+// DEFINES
 #define GPIO_SENSOR_NIVEL 27
 #define GPIO_TEST_LED 2
 #define GPIO_PULSADOR_IZQUIERDO 13
@@ -8,9 +21,11 @@
 #define GPIO_PULSADOR_ARRIBA 19
 #define GPIO_PULSADOR_ABAJO 18
 
+// PROTOTYPES
 void init_antirrebote(void);
 void init_gpio(void);
 
+// STRUCTS
 typedef struct antirrebote_t{
     uint32_t estado_actual;
     uint32_t estado_anterior;
