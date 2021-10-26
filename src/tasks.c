@@ -12,17 +12,8 @@
 
 #include "tasks.h"
 
-//Estructura de entradas antirrebote
-extern antirrebote_t entradas_antirrebote[CANTIDAD_ANTIRREBOTE];
-
-//Datos de ADC
-extern esp_adc_cal_characteristics_t *adc_chars;
-extern const adc_channel_t channel;
-extern const adc_bits_width_t width;
-extern const adc_atten_t atten;
-extern const adc_unit_t unit;
 uint8_t estado_motor=0;
-TaskHandle_t task_handle_1, task_handle_2, task_handle_3, task_handle_4, task_handle_5;
+TaskHandle_t task_handler_1, task_handler_2, task_handler_3, task_handler_4, task_handler_5;
 
 //Variables para el manejo de menúes
 uint8_t pagina_menu=0;
@@ -182,7 +173,7 @@ void navegar_menu(void *pvParameter)
                 //-->Ingresa a la Configuración de WiFi
                 opt_menu=0;
                 pagina_menu=2;
-                vTaskResume(task_handle_5);
+                vTaskResume(task_handler_5);
             }
             //-->Si está seleccionada la opción "Ver Status"
             else if(pagina_menu==1 && opt_menu==1)
@@ -190,7 +181,7 @@ void navegar_menu(void *pvParameter)
                 //-->Ingresa a ver la cantidad de días de cosecha y la cantidad restante estimada
                 opt_menu=0;
                 pagina_menu=3;
-                vTaskResume(task_handle_5);
+                vTaskResume(task_handler_5);
             }
             //Si el programa está posicionado en el menú de WiFi
             //-->Si está seleccionada la opción "Configuración de SSID"            
@@ -201,7 +192,7 @@ void navegar_menu(void *pvParameter)
                 cursor=0;
                 caracter=SSID[0];
                 pagina_menu=4;
-                vTaskResume(task_handle_5);
+                vTaskResume(task_handler_5);
             }       
             //Si el programa está posicionado en el menú de WiFi
             //-->Si está seleccionada la opción "Configuración de PWD"             
@@ -213,14 +204,14 @@ void navegar_menu(void *pvParameter)
                 cursor=0;
                 caracter=PWD[0];
                 pagina_menu=5;
-                vTaskResume(task_handle_5);
+                vTaskResume(task_handler_5);
             }   
             //Si se encuentra en la pantalla principal, accede al primer menú           
             else if(pagina_menu==0)
             {
                 opt_menu=0;
                 pagina_menu=1;
-                vTaskResume(task_handle_5);
+                vTaskResume(task_handler_5);
             }
             //Si se encuentra en la configuración de SSID o PWD mueve el cursor
             else if(pagina_menu==4 || pagina_menu==5)
@@ -231,7 +222,7 @@ void navegar_menu(void *pvParameter)
                 {
                     cursor=0;
                 }
-                vTaskResume(task_handle_5); 
+                vTaskResume(task_handler_5); 
             }
         }
         //Se detecta el nivel alto de la entrada antirrebote asociada al pulsador "IZQUIERDA"
@@ -242,21 +233,21 @@ void navegar_menu(void *pvParameter)
             {
                 opt_menu=0;
                 pagina_menu=0;
-                vTaskResume(task_handle_5);
+                vTaskResume(task_handler_5);
             }
             //Navega desde la configuración WiFi hacia el primer menú
             if(pagina_menu==2)
             {
                 opt_menu=0;
                 pagina_menu=1;
-                vTaskResume(task_handle_5);
+                vTaskResume(task_handler_5);
             }
             //Navega desde "Status" hacia el primer menú
             if(pagina_menu==3)
             {
                 opt_menu=0;
                 pagina_menu=1;
-                vTaskResume(task_handle_5);
+                vTaskResume(task_handler_5);
             }
             //Navega desde la configuración de SSID hacia la configuración WiFi
             if(pagina_menu==4)
@@ -273,7 +264,7 @@ void navegar_menu(void *pvParameter)
                 }
                 strcpy(SSID_seteado,SSID);
                 printf("Se seteó el SSID: %s\n",SSID_seteado);                
-                vTaskResume(task_handle_5);
+                vTaskResume(task_handler_5);
             }
             //Navega desde la configuración de PWD hacia la configuración WiFi
             if(pagina_menu==5)
@@ -290,7 +281,7 @@ void navegar_menu(void *pvParameter)
                 }
                 strcpy(PWD_seteado,PWD);
                 printf("Se seteó el PWD: %s\n",PWD_seteado);                
-                vTaskResume(task_handle_5);
+                vTaskResume(task_handler_5);
             }
         }
         //Se detecta el nivel alto de la entrada antirrebote asociada al pulsador "ARRIBA"
@@ -302,7 +293,7 @@ void navegar_menu(void *pvParameter)
                 if(opt_menu==0)
                 {
                     opt_menu=1; 
-                    vTaskResume(task_handle_5);   
+                    vTaskResume(task_handler_5);   
                 }
             }
             if(pagina_menu==4 || pagina_menu==5)
@@ -311,7 +302,7 @@ void navegar_menu(void *pvParameter)
                 caracter--;
                 if(caracter=='0')
                     caracter='y';
-                vTaskResume(task_handle_5);
+                vTaskResume(task_handler_5);
             }
         }
         //Se detecta el nivel alto de la entrada antirrebote asociada al pulsador "ABAJO"
@@ -323,7 +314,7 @@ void navegar_menu(void *pvParameter)
                 if(opt_menu==1)
                 {
                     opt_menu=0;
-                    vTaskResume(task_handle_5);
+                    vTaskResume(task_handler_5);
                 }    
             }
             if(pagina_menu==4 || pagina_menu==5)
@@ -332,7 +323,7 @@ void navegar_menu(void *pvParameter)
                 caracter++;
                 if(caracter=='y')
                     caracter='0';
-                vTaskResume(task_handle_5);
+                vTaskResume(task_handler_5);
             }
         }
         vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -350,7 +341,7 @@ void control_lcd(void *pvParameter)
             {
                 lcd_SendString("Bienvenido", LCD_ROW_1);
 	            lcd_SendString(">Ingresar al menu", LCD_ROW_2);
-                vTaskSuspend(task_handle_5);
+                vTaskSuspend(task_handler_5);
             }
         }
         if(pagina_menu==1)
@@ -360,13 +351,13 @@ void control_lcd(void *pvParameter)
             {
                 lcd_SendString(">Configurar WiFi", LCD_ROW_1);
 	            lcd_SendString(" Ver Status", LCD_ROW_2);
-                vTaskSuspend(task_handle_5);
+                vTaskSuspend(task_handler_5);
             } 
             if(opt_menu==1)
             {
                 lcd_SendString(" Configurar WiFi", LCD_ROW_1);
 	            lcd_SendString(">Ver Status", LCD_ROW_2);
-                vTaskSuspend(task_handle_5);
+                vTaskSuspend(task_handler_5);
             } 
         }
         if(pagina_menu==2)
@@ -376,13 +367,13 @@ void control_lcd(void *pvParameter)
             {
                 lcd_SendString(">Configurar SSID", LCD_ROW_1);
 	            lcd_SendString(" Configurar PWD", LCD_ROW_2);
-                vTaskSuspend(task_handle_5);
+                vTaskSuspend(task_handler_5);
             }
             if(opt_menu==1)
             {
                 lcd_SendString(" Configurar SSID", LCD_ROW_1);
 	            lcd_SendString(">Configurar PWD", LCD_ROW_2);
-                vTaskSuspend(task_handle_5);
+                vTaskSuspend(task_handler_5);
             } 
         }
         if(pagina_menu==3)
@@ -390,7 +381,7 @@ void control_lcd(void *pvParameter)
             lcd_SendCommand(0x01);    
             lcd_SendString("Dias de cosecha: ", LCD_ROW_1);
 	        lcd_SendString("Días restantes: ", LCD_ROW_2);     
-            vTaskSuspend(task_handle_5);       
+            vTaskSuspend(task_handler_5);       
         }
         if(pagina_menu==4)
         {
@@ -398,7 +389,7 @@ void control_lcd(void *pvParameter)
             SSID[cursor]=caracter;            
             lcd_SendString("Introducir SSID:", LCD_ROW_1);
 	        lcd_SendString(SSID, LCD_ROW_2);
-            vTaskSuspend(task_handle_5);            
+            vTaskSuspend(task_handler_5);            
         }
         if(pagina_menu==5)
         {
@@ -406,7 +397,94 @@ void control_lcd(void *pvParameter)
             PWD[cursor]=caracter;
             lcd_SendString("Introducir PWD:", LCD_ROW_1);
 	        lcd_SendString(PWD, LCD_ROW_2);
-            vTaskSuspend(task_handle_5);            
+            vTaskSuspend(task_handler_5);            
         }
+    }
+}
+
+// Update values in firestore database 
+void firestore_task(void *pvParameter)
+{
+    static uint32_t u32DocLength;
+    static char tcDoc[FIRESTORE_DOC_MAX_SIZE];
+
+    init_firestore();
+    
+    while(1)
+    {
+        if(entradas_antirrebote[0].level)   // 3V3 
+        {
+            // Apagamos el LED
+            gpio_set_level(GPIO_TEST_LED,0);
+            
+            u32DocLength = snprintf(tcDoc, sizeof(tcDoc), " ");
+
+            // Leemos de firestore un documento
+            firestore_err_t FIRESTORE_STATUS= firestore_get_document(PLANTS_COLLECTION_ID, PLANT_DOCUMENT_ID, tcDoc, &u32DocLength);
+
+            // Chequeamos si hay error
+            if(FIRESTORE_STATUS != FIRESTORE_OK)
+            {
+                printf("ERROR: Couldn't get document\n");
+            }
+
+            // Creamos un archivo JSON para respaldar el documento leido de firestore
+            FILE* f = fopen("/spiffs/document.json", "w");    
+
+            // Chequeamos si hay error
+            if (f != NULL)                                   
+            {
+                // Guardamos el JSON en un archivo
+                fprintf(f, "%s", tcDoc);
+                fputc('\0', f);
+                fclose(f); 
+            }
+
+            // Actualizamos el valor de un campo
+            char valor[100]; 
+            itoa(rand(), valor, 10);
+            int value = replace_value("/spiffs/document.json", "temperature", valor);
+
+            // Chequeamos si hay error
+            if(value == -1)
+            {
+                printf("ERROR: Couldn´t replace value in JSON file\n");
+            }
+
+            // value = search_value("/spiffs/document.json", "temperature", valor);
+
+            // if(value == -1)
+            // {
+            //      printf("ERROR: Couldn´t search value in JSON file\n");
+            // }
+
+            // printf("Leimos la key name y es: %s\n", valor);
+
+            // Abrimos el JSON con el campo actualizado
+            f = fopen("/spiffs/document.json", "r");
+
+            // Pasamos el contenido del JSON a una variable
+            fread(tcDoc, FIRESTORE_DOC_MAX_SIZE, 1, f);
+
+            // Cerramos archivo JSON de respaldo
+            fclose(f);
+
+            // Actualizamos el documento en firestore
+            FIRESTORE_STATUS= firestore_update_document(ESP_COLLECTION_ID, ESP_DOCUMENT_ID, tcDoc, &u32DocLength);
+            
+            // Chequeamos si hay error
+            if(FIRESTORE_STATUS != FIRESTORE_OK)
+            {
+                printf("ERROR: Couldn't update document\n");
+            }
+            
+        }
+        else                                // GND
+        {
+            // Encendemos el LED
+            gpio_set_level(GPIO_TEST_LED,1);
+        }
+
+        vTaskDelay(FIRESTORE_PERIOD_MS / portTICK_PERIOD_MS);
     }
 }
