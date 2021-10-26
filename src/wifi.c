@@ -1,3 +1,15 @@
+/////////////////////////////////////////////////////////////////////////////////////////
+//  Proyecto: Sistema Hidropónico Para Hogares                                         // 
+//  Alumnos: *Lucia Sucunza                                                            //
+//           *Nicolas Gomez                                                            //
+//           *Santiago Laborde                                                         //                          
+//                                                                                     // 
+//  Archivo: wifi.c                                                                    // 
+//  Descripción: Contiene todas las implementaciones de las tareas para la conexión    // 
+//                wifi                                                                 // 
+//                                                                                     // 
+/////////////////////////////////////////////////////////////////////////////////////////
+
 #include "wifi.h"
 
 static wifi_ctx_t stCtx;
