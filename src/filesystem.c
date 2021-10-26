@@ -1,13 +1,13 @@
-// /////////////////////////////////////////////////////////////////////////////////////////
-// //  Proyecto: Sistema Hidropónico Para Hogares                                         // 
-// //  Alumnos: *Lucia Sucunza                                                            //
-// //           *Nicolas Gomez                                                            //
-// //           *Santiago Laborde                                                         //                          
-// //                                                                                     // 
-// //  Archivo: filesystem.c                                                              // 
-// //  Descripción: Contiene todas las funciones asociadas al manejo del filesystem SPIFFS//
-// //                                                                                     // 
-// /////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////
+//  Proyecto: Sistema Hidropónico Para Hogares                                         // 
+//  Alumnos: *Lucia Sucunza                                                            //
+//           *Nicolas Gomez                                                            //
+//           *Santiago Laborde                                                         //                          
+//                                                                                     // 
+//  Archivo: filesystem.c                                                              // 
+//  Descripción: Contiene todas las funciones asociadas al manejo del filesystem SPIFFS//
+//                                                                                     // 
+/////////////////////////////////////////////////////////////////////////////////////////
 
 #include "filesystem.h"
 
