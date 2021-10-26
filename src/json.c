@@ -1,3 +1,14 @@
+/////////////////////////////////////////////////////////////////////////////////////////
+//  Proyecto: Sistema Hidropónico Para Hogares                                         // 
+//  Alumnos: *Lucia Sucunza                                                            //
+//           *Nicolas Gomez                                                            //
+//           *Santiago Laborde                                                         //                          
+//                                                                                     // 
+//  Archivo: json.c                                                                    // 
+//  Descripción: Contiene todas las funciones asociadas al manejo de JSONs.            //   
+//                                                                                     // 
+/////////////////////////////////////////////////////////////////////////////////////////
+
 #include "json.h"
 
 int search_value(char *file_name, char *key, char *value)
