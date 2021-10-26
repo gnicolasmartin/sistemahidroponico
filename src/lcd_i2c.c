@@ -1,10 +1,15 @@
-/* Includes ------------------------------------------------------------------*/
-#include "lcd_i2c.h"
+/////////////////////////////////////////////////////////////////////////////////////////
+//  Proyecto: Sistema Hidropónico Para Hogares                                         // 
+//  Alumnos: *Lucia Sucunza                                                            //
+//           *Nicolas Gomez                                                            //
+//           *Santiago Laborde                                                         //                          
+//                                                                                     // 
+//  Archivo: json.c                                                                    // 
+//  Descripción: Contiene todas las funciones asociadas al manejo de JSONs.            //   
+//                                                                                     // 
+/////////////////////////////////////////////////////////////////////////////////////////
 
-/* Private Functions ---------------------------------------------------------*/
-void i2c_Init (void);
-int lcd_SendInternal(uint8_t, uint8_t);
-int lcd_WriteData(uint8_t, uint8_t *, int);
+#include "lcd_i2c.h"
 
 /* Function-------------------------------------------------------------------*/
 void lcd_Init(void)
