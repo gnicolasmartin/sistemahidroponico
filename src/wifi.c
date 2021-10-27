@@ -13,8 +13,11 @@
 #include "wifi.h"
 
 static wifi_ctx_t stCtx;
+char WIFI_SSID[MAX_LENGTH_SSID]= {0};  
+char WIFI_PSWD[MAX_LENGTH_PSWD]= {0}; 
 
-void init_wifi(void)
+
+void wifi_init(void)
 {
   printf("wifi initialization\n");
   esp_err_t s32RetVal;
@@ -40,8 +43,8 @@ void init_wifi(void)
   {
     .sta =
     {
-      .ssid = WIFI_SSID,
-      .password = WIFI_PASSWORD,
+      .ssid = SSID_HARDCODEADO,
+      .password = PASSWORD_HARDCODEADO,
       .threshold.authmode = WIFI_AUTH_WPA2_PSK,
       .pmf_cfg =
       {
@@ -106,4 +109,59 @@ void wifi_event_handler(void* pvArg, esp_event_base_t pcEventBase, int32_t s32Ev
     stCtx.u08RetryCount = 0;
     xEventGroupSetBits(stCtx.stWifiEventGroup, APP_WIFI_CONNECTED_BIT);
   }
+}
+
+int save_wifi_config(void)
+{
+    FILE* config_file = fopen(WIFI_CONFIG_FILE,"w");   
+
+    if (config_file == NULL) 
+    {   
+        perror("fopen failed"); 
+        return -1;
+    } 
+    
+    fprintf(config_file, "WIFI_SSID: %s\n", WIFI_SSID);
+    fprintf(config_file, "WIFI_PSWD: %s\n", WIFI_PSWD);
+    fputc('\0', config_file);
+
+    fclose(config_file);   
+    return 0;
+}
+
+int load_wifi_config(void)
+{
+    FILE* config_file = fopen(WIFI_CONFIG_FILE,"r");   
+	
+    if (config_file == NULL) 
+    {   
+        perror("fopen failed"); 
+        return -1;
+    } 
+    
+    int KEY_LEN= strlen("WIFI_SSID")+1; // Todas las keys son del mismo largo
+    char* KEY= malloc(KEY_LEN);
+
+    while (!feof(config_file))
+    {  
+        fgets(KEY, KEY_LEN, config_file); 
+
+        if(!strcmp(KEY,"WIFI_SSID"))
+        {
+            fgetc(config_file); // Lee el ":"
+            fscanf(config_file, "%s", WIFI_SSID); // Lee el value de la key
+        }   
+        else if(!strcmp(KEY,"WIFI_PSWD"))
+        {
+            fgetc(config_file); // Lee el ":"
+            fscanf(config_file, "%s", WIFI_PSWD); // Lee el value de la key
+        }
+    }
+
+    printf("Leimos: WIFI_SSID: %s\n", WIFI_SSID);
+    printf("Leimos: WIFI_PSWD: %s\n", WIFI_PSWD);
+    free(KEY);
+    fclose(config_file);   
+
+    return 0;
 }

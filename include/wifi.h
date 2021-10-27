@@ -25,13 +25,16 @@
 //_________
 
 // DEFINES
-#define APP_WIFI_TAG                            "APP_WIFI"
-#define APP_WIFI_MAXIMUM_RETRY                   0xFFFFFFFF
-#define APP_WIFI_CONNECTED_BIT                   BIT0
-#define APP_WIFI_FAIL_BIT                        BIT1
+#define APP_WIFI_TAG            "APP_WIFI"
+#define APP_WIFI_MAXIMUM_RETRY  0xFFFFFFFF
+#define APP_WIFI_CONNECTED_BIT  BIT0
+#define APP_WIFI_FAIL_BIT       BIT1
+#define MAX_LENGTH_SSID         16
+#define MAX_LENGTH_PSWD         16
 // WiFi Credentials
-#define WIFI_SSID "Telecentro-1188_EXT"
-#define WIFI_PASSWORD "poligono425"
+#define SSID_HARDCODEADO "Telecentro-1188_EXT"
+#define PASSWORD_HARDCODEADO "poligono425"
+#define WIFI_CONFIG_FILE "/spiffs/wifi.yml"
 
 // STRUCTS
 typedef struct
@@ -43,8 +46,10 @@ typedef struct
 }wifi_ctx_t;
 
 // PROTOTYPES
-void init_wifi(void);
+void wifi_init(void);
 void wifi_wait(void);
 void wifi_event_handler(void* pvArg, esp_event_base_t pcEventBase, int32_t s32EventId, void* pvEventData);
+int save_wifi_config(void);
+int load_wifi_config(void);
 
 #endif /* WIFI_H_ */

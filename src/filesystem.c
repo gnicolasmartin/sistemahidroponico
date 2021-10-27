@@ -13,7 +13,7 @@
 
 const char* spiffs_test_partition_label = "flash_test";
 
-void init_fs(esp_vfs_spiffs_conf_t* conf)
+void fs_init(esp_vfs_spiffs_conf_t* conf)
 {
     printf("Initializing SPIFFS\n");
 
@@ -49,5 +49,4 @@ void init_fs(esp_vfs_spiffs_conf_t* conf)
     {
         printf("Partition size: total: %d, used: %d\n", total, used);
     }
-
 }

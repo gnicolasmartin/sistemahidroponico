@@ -17,4 +17,4 @@
 #include "esp_spiffs.h"
 
 // PROTOTYPES
-void init_fs(esp_vfs_spiffs_conf_t* conf);
+void fs_init(esp_vfs_spiffs_conf_t* conf);

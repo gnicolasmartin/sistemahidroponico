@@ -18,11 +18,11 @@
 #include "driver/i2c.h"
 
 // PROTOTYPES
-void lcd_Init (void);
-void lcd_SendString (char *, int);
-void lcd_SendCommand (uint8_t);
-void lcd_SendData (uint8_t);
-void i2c_Init (void);
+void lcd_init (void);
+void lcd_send_string (char *, int);
+void lcd_send_command (uint8_t);
+void lcd_send_data (uint8_t);
+void i2c_init (void);
 int lcd_SendInternal(uint8_t, uint8_t);
 int lcd_WriteData(uint8_t, uint8_t *, int);
 

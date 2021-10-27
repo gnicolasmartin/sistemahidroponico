@@ -12,28 +12,28 @@
 #include "lcd_i2c.h"
 
 /* Function-------------------------------------------------------------------*/
-void lcd_Init(void)
+void lcd_init(void)
 {
     // Init I2C
-    i2c_Init();
-	lcd_SendCommand(LCD_FUNCTION_SET_4BIT);
-	lcd_SendCommand(LCD_HOME);
-	lcd_SendCommand(LCD_DISPLAY_ON);
-	lcd_SendCommand(LCD_CLEAR);
+    i2c_init();
+	lcd_send_command(LCD_FUNCTION_SET_4BIT);
+	lcd_send_command(LCD_HOME);
+	lcd_send_command(LCD_DISPLAY_ON);
+	lcd_send_command(LCD_CLEAR);
 }
 
-void lcd_SendString(char *str, int row)
+void lcd_send_string(char *str, int row)
 {
-    lcd_SendCommand(row);
+    lcd_send_command(row);
 	while(*str)
 	{
-		lcd_SendData((uint8_t)(*str));
+		lcd_send_data((uint8_t)(*str));
 		str++;
 	}
 }
 
 /* Private Functions ---------------------------------------------------------*/
-void i2c_Init(void)
+void i2c_init(void)
 {
     // Configuration
     i2c_config_t conf = {
@@ -50,12 +50,12 @@ void i2c_Init(void)
     i2c_driver_install(I2C_MASTER_NUM, I2C_MODE_MASTER, 0, 0, 0);
 }
 
-void lcd_SendCommand(uint8_t cmd)
+void lcd_send_command(uint8_t cmd)
 {
 	lcd_SendInternal(cmd, LCD_RS_CMD);
 }
 
-void lcd_SendData(uint8_t data)
+void lcd_send_data(uint8_t data)
 {
 	lcd_SendInternal(data, LCD_RS_DATA);
 }

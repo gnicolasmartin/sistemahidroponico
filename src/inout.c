@@ -14,7 +14,7 @@
 volatile antirrebote_t entradas_antirrebote[CANTIDAD_ANTIRREBOTE];
 
 //Función utilizada para inicializar las GPIO
-void init_gpio(void)
+void gpio_init(void)
 {
     //Inicialización del sensor de nivel
     gpio_pad_select_gpio(GPIO_SENSOR_NIVEL);

@@ -18,6 +18,7 @@
 #include "json.h"
 #include "firestore.h"
 #include "filesystem.h"
+#include "wifi.h"
 #include <string.h>
 
 // DEFINES
@@ -45,4 +46,8 @@ extern const adc_channel_t channel;
 extern const adc_bits_width_t width;
 extern const adc_atten_t atten;
 extern const adc_unit_t unit;
+//wifi
+extern char WIFI_SSID[MAX_LENGTH_SSID]; 
+extern char WIFI_PSWD[MAX_LENGTH_PSWD];
+
 

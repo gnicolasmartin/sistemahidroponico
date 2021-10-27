@@ -24,8 +24,6 @@ char SSID[16]="                ";
 char PWD[16]="                ";
 uint8_t cursor=0;
 char caracter='0';
-char SSID_seteado[16];
-char PWD_seteado[16];
 
 //Tarea que lee las entradas implementando antirrebote por Software
 void leer_entradas(void *pvParameter)
@@ -87,10 +85,35 @@ void toggle_led(void *pvParameter)
     while(1)
     {
         if(entradas_antirrebote[0].level)
+        {
             gpio_set_level(GPIO_TEST_LED,0);
+            printf("Presionado 0\n");
+        }
+        else if(entradas_antirrebote[1].level)
+        {
+            gpio_set_level(GPIO_TEST_LED,0);
+            printf("Presionado DERECHA\n");
+        }
+        else if(entradas_antirrebote[2].level)
+        {
+            gpio_set_level(GPIO_TEST_LED,0);
+            printf("Presionado IZQUIERDA\n");
+        }
+        else if(entradas_antirrebote[3].level)
+        {
+            gpio_set_level(GPIO_TEST_LED,0);
+            printf("Presionado ARRIBA\n");
+        }
+        else if(entradas_antirrebote[4].level)
+        {
+            gpio_set_level(GPIO_TEST_LED,0);
+            printf("Presionado ABAJO\n");
+        }
         else
+        {
             gpio_set_level(GPIO_TEST_LED,1);
-        printf("Cambiando valor de led\n");
+        }
+
         vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }
@@ -262,8 +285,10 @@ void navegar_menu(void *pvParameter)
                         SSID[i]='\0';
                     }
                 }
-                strcpy(SSID_seteado,SSID);
-                printf("Se seteó el SSID: %s\n",SSID_seteado);                
+                //strcpy(SSID_seteado,SSID);
+                sprintf(WIFI_SSID, "%s", SSID);
+                printf("Se seteó el SSID: %s\n", SSID);   
+                save_wifi_config(); 
                 vTaskResume(task_handler_5);
             }
             //Navega desde la configuración de PWD hacia la configuración WiFi
@@ -279,8 +304,10 @@ void navegar_menu(void *pvParameter)
                         PWD[i]='\0';
                     }
                 }
-                strcpy(PWD_seteado,PWD);
-                printf("Se seteó el PWD: %s\n",PWD_seteado);                
+
+                sprintf(WIFI_SSID, "%s", PWD);
+                printf("Se seteó el PWD: %s\n", PWD);      
+                save_wifi_config();        
                 vTaskResume(task_handler_5);
             }
         }
@@ -336,69 +363,88 @@ void control_lcd(void *pvParameter)
     while (1) {
         if(pagina_menu==0)
         {
-            lcd_SendCommand(0x01);
+            lcd_send_command(0x01);
             if(opt_menu==0)
             {
-                lcd_SendString("Bienvenido", LCD_ROW_1);
-	            lcd_SendString(">Ingresar al menu", LCD_ROW_2);
+                printf("Bienvenido\n");
+                printf(">Ingresar al menu\n");
+                lcd_send_string("Bienvenido", LCD_ROW_1);
+	            lcd_send_string(">Ingresar al menu", LCD_ROW_2);
                 vTaskSuspend(task_handler_5);
             }
         }
         if(pagina_menu==1)
         {
-            lcd_SendCommand(0x01);
+            lcd_send_command(0x01);
             if(opt_menu==0)
             {
-                lcd_SendString(">Configurar WiFi", LCD_ROW_1);
-	            lcd_SendString(" Ver Status", LCD_ROW_2);
+                printf(">Configurar WiFi\n");
+                printf(" Ver Status\n");
+                lcd_send_string(">Configurar WiFi", LCD_ROW_1);
+	            lcd_send_string(" Ver Status", LCD_ROW_2);
                 vTaskSuspend(task_handler_5);
             } 
             if(opt_menu==1)
             {
-                lcd_SendString(" Configurar WiFi", LCD_ROW_1);
-	            lcd_SendString(">Ver Status", LCD_ROW_2);
+                printf(" Configurar WiFi\n");
+                printf(">Ver Status\n");
+                lcd_send_string(" Configurar WiFi", LCD_ROW_1);
+	            lcd_send_string(">Ver Status", LCD_ROW_2);
                 vTaskSuspend(task_handler_5);
             } 
         }
         if(pagina_menu==2)
         {
-            lcd_SendCommand(0x01);
+            lcd_send_command(0x01);
             if(opt_menu==0)
             {
-                lcd_SendString(">Configurar SSID", LCD_ROW_1);
-	            lcd_SendString(" Configurar PWD", LCD_ROW_2);
+                printf(">Configurar SSID\n");
+                printf(" Configurar PWD\n");
+                lcd_send_string(">Configurar SSID", LCD_ROW_1);
+	            lcd_send_string(" Configurar PWD", LCD_ROW_2);
                 vTaskSuspend(task_handler_5);
             }
             if(opt_menu==1)
             {
-                lcd_SendString(" Configurar SSID", LCD_ROW_1);
-	            lcd_SendString(">Configurar PWD", LCD_ROW_2);
+                printf(" Configurar SSID\n");
+                printf(">Configurar PWD\n");
+                lcd_send_string(" Configurar SSID", LCD_ROW_1);
+	            lcd_send_string(">Configurar PWD", LCD_ROW_2);
                 vTaskSuspend(task_handler_5);
             } 
         }
         if(pagina_menu==3)
         {
-            lcd_SendCommand(0x01);    
-            lcd_SendString("Dias de cosecha: ", LCD_ROW_1);
-	        lcd_SendString("Días restantes: ", LCD_ROW_2);     
+            load_wifi_config(); //Prueba borrar
+            printf("Dias de cosecha: \n");
+            printf("Días restantes: \n");
+            lcd_send_command(0x01);    
+            lcd_send_string("Dias de cosecha: ", LCD_ROW_1);
+	        lcd_send_string("Días restantes: ", LCD_ROW_2);     
             vTaskSuspend(task_handler_5);       
         }
         if(pagina_menu==4)
-        {
-            lcd_SendCommand(0x01);
+        {            
+            lcd_send_command(0x01);
             SSID[cursor]=caracter;            
-            lcd_SendString("Introducir SSID:", LCD_ROW_1);
-	        lcd_SendString(SSID, LCD_ROW_2);
+            lcd_send_string("Introducir SSID:", LCD_ROW_1);
+	        lcd_send_string(SSID, LCD_ROW_2);
+            printf("Introducir SSID:\n");
+            printf("%s\n", SSID);
             vTaskSuspend(task_handler_5);            
         }
         if(pagina_menu==5)
         {
-            lcd_SendCommand(0x01);
+            lcd_send_command(0x01);
             PWD[cursor]=caracter;
-            lcd_SendString("Introducir PWD:", LCD_ROW_1);
-	        lcd_SendString(PWD, LCD_ROW_2);
+            lcd_send_string("Introducir PWD:", LCD_ROW_1);
+	        lcd_send_string(PWD, LCD_ROW_2);
+            printf("Introducir PWD:\n");
+            printf("%s\n", PWD);
             vTaskSuspend(task_handler_5);            
         }
+
+        vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 }
 
