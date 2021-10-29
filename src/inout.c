@@ -27,12 +27,15 @@ void gpio_init(void)
 
     gpio_pad_select_gpio(GPIO_PULSADOR_IZQUIERDO);
     gpio_set_direction(GPIO_PULSADOR_IZQUIERDO,GPIO_MODE_INPUT);
+    gpio_set_pull_mode(GPIO_PULSADOR_IZQUIERDO, GPIO_PULLUP_ONLY);
 
     gpio_pad_select_gpio(GPIO_PULSADOR_ARRIBA);
     gpio_set_direction(GPIO_PULSADOR_ARRIBA,GPIO_MODE_INPUT);
+    gpio_set_pull_mode(GPIO_PULSADOR_ARRIBA, GPIO_PULLUP_ONLY);
 
     gpio_pad_select_gpio(GPIO_PULSADOR_ABAJO);
     gpio_set_direction(GPIO_PULSADOR_ABAJO,GPIO_MODE_INPUT);
+    gpio_set_pull_mode(GPIO_PULSADOR_ABAJO, GPIO_PULLUP_ONLY);
 
     //Inicialización de LED de prueba
     gpio_pad_select_gpio(GPIO_TEST_LED);
@@ -76,7 +79,8 @@ void init_antirrebote(void)
     for(i=0;i<CANTIDAD_ANTIRREBOTE;i++)
     {
         entradas_antirrebote[i].contador=0;
-        entradas_antirrebote[i].estado_actual=0;      
-        entradas_antirrebote[i].estado_anterior=0;   
+        entradas_antirrebote[i].estado_actual=1;      
+        entradas_antirrebote[i].estado_anterior=1;
+        entradas_antirrebote[i].level=1;     
     }
 }

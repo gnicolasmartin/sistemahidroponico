@@ -195,7 +195,7 @@ void navegar_menu(void *pvParameter)
     int i;
     while (1) {
         //Se detecta el nivel alto de la entrada antirrebote asociada al pulsador "DERECHA"
-        if(entradas_antirrebote[1].level)
+        if(!entradas_antirrebote[1].level)
         {
             //Si el programa está posicionado en el primer menú de opciones
             //-->Si está seleccionada la opción "Configuración WiFi"
@@ -257,7 +257,7 @@ void navegar_menu(void *pvParameter)
             }
         }
         //Se detecta el nivel alto de la entrada antirrebote asociada al pulsador "IZQUIERDA"
-        if(entradas_antirrebote[2].level)
+        if(!entradas_antirrebote[2].level)
         {
             //Navega desde el primer menú hacia la pantalla principal
             if(pagina_menu==1)
@@ -320,7 +320,7 @@ void navegar_menu(void *pvParameter)
             }
         }
         //Se detecta el nivel alto de la entrada antirrebote asociada al pulsador "ARRIBA"
-        if(entradas_antirrebote[3].level)
+        if(!entradas_antirrebote[3].level)
         {
             if(pagina_menu==1 || pagina_menu==2)
             {
@@ -341,7 +341,7 @@ void navegar_menu(void *pvParameter)
             }
         }
         //Se detecta el nivel alto de la entrada antirrebote asociada al pulsador "ABAJO"
-        if(entradas_antirrebote[4].level)
+        if(!entradas_antirrebote[4].level)
         {
             if(pagina_menu==1 || pagina_menu==2)
             {
