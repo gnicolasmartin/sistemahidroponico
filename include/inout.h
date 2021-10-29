@@ -13,7 +13,8 @@
 #include "driver/gpio.h"
 
 // DEFINES
-#define GPIO_SENSOR_NIVEL       18
+#define SENSOR_NIVEL_PRI        36
+#define SENSOR_NIVEL_SEC        39
 #define GPIO_TEST_LED           2  // LED BUILT IN
 #define CANTIDAD_ANTIRREBOTE    5
 // Pulsadores del teclado
@@ -21,6 +22,23 @@
 #define GPIO_PULSADOR_DERECHO   26
 #define GPIO_PULSADOR_ARRIBA    27
 #define GPIO_PULSADOR_ABAJO     33
+// COOLERS
+#define GPIO_COOL_1             14
+#define GPIO_COOL_2             12
+// BOMBAS
+#define GPIO_BOMBA_PRINCIPAL    13
+#define GPIO_DOSIF_1            16
+#define GPIO_DOSIF_2            17
+#define GPIO_DOSIF_3            5
+// CALEFACTOR            
+#define GPIO_CALEFACTOR         19
+// ALIMENTACION SONDAS            
+#define GPIO_ALIMENTACION_AUX   23
+// MOTOR SONDAS            
+#define GPIO_BRAZO_SONDAS       18
+// DHT11            
+#define GPIO_SENSOR_TEMP        4
+
 
 // PROTOTYPES
 void init_antirrebote(void);
