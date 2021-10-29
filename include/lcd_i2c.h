@@ -33,12 +33,13 @@ int lcd_WriteData(uint8_t, uint8_t *, int);
 #define ACK_CHECK_DIS              0x0              /*!< I2C master will not check ack from slave */
 #define LCD_ADDR    (0x27)
 #define LCD_DELAY_MS 5
+#define LCD_DELAY_US 10000
 // LCD instructions: https://mil.ufl.edu/3744/docs/lcdmanual/commands.html
 #define LCD_CLEAR               0x01        // Replace all characters with ASCII 'space'
 #define LCD_HOME                0x02        // Return cursor to first position on first line
 #define LCD_DISPLAY_ON          0x0C        // Display on, cursor not displayed, don't blink character
 //#define LCD_FUNCTION_SET_4BIT   0x30        // 4-bit data, 1-line display, 5x10 font
-#define LCD_FUNCTION_SET_4BIT   0x28        // 4-bit data, 2-line display, 5x7 font
+#define LCD_FUNCTION_SET_4BIT   0x08        // 4-bit data, 2-line display, 5x8 font
 // Pin mappings
 #define LCD_RS_CMD      (0 << 0)            // P0 -> RS
 #define LCD_RS_DATA     (1 << 0)            // P0 -> RS

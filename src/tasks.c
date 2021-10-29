@@ -140,7 +140,7 @@ void toggle_pin(void *pvParameter)
             gpio_set_level(GPIO_BRAZO_SONDAS,1);
             printf("CAMBIO DE ESTADO 1\n");
         }
-        vTaskDelay(1 / portTICK_PERIOD_MS);
+        vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 }
 

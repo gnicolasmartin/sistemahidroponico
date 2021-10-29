@@ -23,6 +23,7 @@ void gpio_init(void)
     //Inicialización de pulsadores
     gpio_pad_select_gpio(GPIO_PULSADOR_DERECHO);
     gpio_set_direction(GPIO_PULSADOR_DERECHO,GPIO_MODE_INPUT);
+    gpio_set_pull_mode(GPIO_PULSADOR_DERECHO, GPIO_PULLUP_ONLY);
 
     gpio_pad_select_gpio(GPIO_PULSADOR_IZQUIERDO);
     gpio_set_direction(GPIO_PULSADOR_IZQUIERDO,GPIO_MODE_INPUT);

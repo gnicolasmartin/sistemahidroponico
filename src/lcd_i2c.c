@@ -16,7 +16,9 @@ void lcd_init(void)
 {
     // Init I2C
     i2c_init();
+    ets_delay_us(50000);
 	lcd_send_command(LCD_FUNCTION_SET_4BIT);
+    ets_delay_us(4500);
 	lcd_send_command(LCD_HOME);
 	lcd_send_command(LCD_DISPLAY_ON);
 	lcd_send_command(LCD_CLEAR);
@@ -74,7 +76,7 @@ int lcd_SendInternal(uint8_t data, uint8_t mode)
 
     res = lcd_WriteData(LCD_ADDR, data_arr, 4);
 
-    vTaskDelay(LCD_DELAY_MS / portTICK_RATE_MS);
+    ets_delay_us(LCD_DELAY_US);
 	return res;
 }
 
