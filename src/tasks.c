@@ -38,7 +38,7 @@ void leer_entradas(void *pvParameter)
             switch(i)
             {
                 case 0:
-                    entradas_antirrebote[i].estado_actual = gpio_get_level(GPIO_SENSOR_NIVEL);
+                    entradas_antirrebote[i].estado_actual = gpio_get_level(SENSOR_NIVEL_SEC);
                     break;
                 case 1:
                     entradas_antirrebote[i].estado_actual = gpio_get_level(GPIO_PULSADOR_DERECHO);
@@ -125,14 +125,22 @@ void toggle_pin(void *pvParameter)
         if(estado_motor == 0)
         {
             estado_motor = 1;
-            gpio_set_level(19,0);
+            gpio_set_level(GPIO_DOSIF_1,0);
+            gpio_set_level(GPIO_DOSIF_2,0);
+            gpio_set_level(GPIO_DOSIF_3,0);
+            gpio_set_level(GPIO_BRAZO_SONDAS,0);
+            printf("CAMBIO DE ESTADO 0\n");
         }
         else
         {
             estado_motor = 0;    
-            gpio_set_level(19,1);
+            gpio_set_level(GPIO_DOSIF_1,1);
+            gpio_set_level(GPIO_DOSIF_2,1);
+            gpio_set_level(GPIO_DOSIF_3,1);
+            gpio_set_level(GPIO_BRAZO_SONDAS,1);
+            printf("CAMBIO DE ESTADO 1\n");
         }
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 }
 
