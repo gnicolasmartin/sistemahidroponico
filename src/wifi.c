@@ -20,6 +20,9 @@ char WIFI_PSWD[MAX_LENGTH_PSWD]= {0};
 void wifi_init(void)
 {
   printf("wifi initialization\n");
+
+  load_wifi_config(); // Carga red y contraseña wifi en caso de que ya las hayan ingresado
+
   esp_err_t s32RetVal;
 
   memset(&stCtx, 0x00, sizeof(stCtx));

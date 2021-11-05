@@ -21,15 +21,16 @@ esp_vfs_spiffs_conf_t conf =
 
 void app_main()
 {
-    lcd_init();
-    //lcd_send_string("Hello world",LCD_ROW_1);
+    
     //Se llama a las funciones de inicialización
     nvs_flash_init();
     gpio_init();
     //adc_init();
-    wifi_init();
-    // wifi_wait();
-    fs_init(&conf);
+    lcd_init();
+    fs_init(&conf); 
+    wifi_init();    // primero inicializar el FS para poder levantar el archivo de configuración del wifi
+    wifi_wait();
+    
 
     //Se crean las tareas a despachar por el scheduler
     //xTaskCreate(&toggle_led, "toggle_led", 1024, NULL, 1, &task_handler_1);
