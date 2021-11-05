@@ -19,11 +19,12 @@
 #include "filesystem.h"
 
 // PROTOTYPES
-extern TaskHandle_t task_handler_1;
-extern TaskHandle_t task_handler_2;
-extern TaskHandle_t task_handler_3;
-extern TaskHandle_t task_handler_4;
-extern TaskHandle_t task_handler_5;
+extern TaskHandle_t task_handler_firestore;
+extern TaskHandle_t task_handler_adc;
+extern TaskHandle_t task_handler_input;
+extern TaskHandle_t task_handler_menu;
+extern TaskHandle_t task_handler_lcd;
+extern TaskHandle_t task_handler_motor;
 
 
 

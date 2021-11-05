@@ -19,9 +19,10 @@ esp_vfs_spiffs_conf_t conf =
     .format_if_mount_failed = true
 };
 
+uint8_t init_ok = 0;
+
 void app_main()
-{
-    
+{    
     //Se llama a las funciones de inicialización
     nvs_flash_init();
     gpio_init();
@@ -29,17 +30,24 @@ void app_main()
     lcd_init();
     fs_init(&conf); 
     wifi_init();    // primero inicializar el FS para poder levantar el archivo de configuración del wifi
-    wifi_wait();
-    
+    //wifi_wait();
 
+    init_ok = 1;
+    
     //Se crean las tareas a despachar por el scheduler
-    //xTaskCreate(&toggle_led, "toggle_led", 1024, NULL, 1, &task_handler_1);
-    xTaskCreate(&leer_entradas, "leer_entradas", 1024, NULL, 1, &task_handler_2);
-    //xTaskCreate(&leer_adc_ec, "leer_adc_ec", 4096, NULL, 2, &task_handler_3);
-    xTaskCreate(&navegar_menu, "navegar_menu", 10240, NULL, 2, &task_handler_4);
-    xTaskCreate(&control_lcd, "control_lcd", 4096, NULL, 2, &task_handler_5);    
-    //xTaskCreate(&toggle_pin,"toggle_pin", 4096, NULL, 1, NULL);
-    //xTaskCreate(&firestore_task,"firestore", 10240, NULL, 4, NULL);
+    //xTaskCreate(&toggle_led, "toggle_led", 1024, NULL, 1, NULL);
+    xTaskCreate(&state_machine,"state_machine", 10240, NULL, 3, NULL); 
+    xTaskCreate(&leer_entradas, "leer_entradas", 1024, NULL, 1, &task_handler_input);
+    //xTaskCreate(&leer_adc_ec, "leer_adc_ec", 4096, NULL, 2, &task_handler_adc);
+    xTaskCreate(&navegar_menu, "navegar_menu", 10240, NULL, 1, &task_handler_menu);
+    xTaskCreate(&control_lcd, "control_lcd", 4096, NULL, 2, &task_handler_lcd);    
+    xTaskCreate(&motor_sonda,"motor_sonda", 4096, NULL, 2, &task_handler_motor);
+    //xTaskCreate(&firestore_task,"firestore", 10240, NULL, 4, &task_handler_firestore);
+
+    vTaskSuspend(task_handler_input);
+    vTaskSuspend(task_handler_menu);
+    vTaskSuspend(task_handler_motor);    
+
     
     // All done, unmount partition and disable SPIFFS
     // esp_vfs_spiffs_unregister(conf.partition_label);

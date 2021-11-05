@@ -12,8 +12,8 @@
 
 #include "tasks.h"
 
-uint8_t estado_motor=0;
-TaskHandle_t task_handler_1, task_handler_2, task_handler_3, task_handler_4, task_handler_5;
+uint8_t machine_state = STATE_INIT;
+TaskHandle_t task_handler_motor, task_handler_firestore, task_handler_adc, task_handler_input, task_handler_menu, task_handler_lcd;
 
 //Variables para el manejo de menúes
 uint8_t pagina_menu=0;
@@ -24,6 +24,8 @@ char SSID[16]="                ";
 char PWD[16]="                ";
 uint8_t cursor=0;
 char caracter='0';
+extern uint8_t wifi_connected;
+extern uint8_t init_ok;
 
 //Tarea que lee las entradas implementando antirrebote por Software
 void leer_entradas(void *pvParameter)
@@ -65,7 +67,7 @@ void leer_entradas(void *pvParameter)
                 {
                     entradas_antirrebote[i].contador=0;
                     entradas_antirrebote[i].estado_anterior=entradas_antirrebote[i].estado_actual;
-                    entradas_antirrebote[i].level=entradas_antirrebote[i].estado_actual;                  
+                    entradas_antirrebote[i].level=entradas_antirrebote[i].estado_actual;                 
                 }
             }
             else
@@ -75,7 +77,7 @@ void leer_entradas(void *pvParameter)
             }
         }
 
-        vTaskDelay(1 / portTICK_PERIOD_MS);
+        vTaskDelay(10 / portTICK_PERIOD_MS);
     }
 }
 
@@ -118,29 +120,31 @@ void toggle_led(void *pvParameter)
     }
 }
 
-void toggle_pin(void *pvParameter)
+void motor_sonda(void *pvParameter)
 {
+    uint8_t estado_motor = 0;
+    uint8_t i = 0;
     while(1)
     {
+        i++;
+        if(i>90)
+        {
+            i=0;
+            vTaskSuspend(task_handler_motor);
+        }
         if(estado_motor == 0)
         {
             estado_motor = 1;
-            gpio_set_level(GPIO_DOSIF_1,0);
-            gpio_set_level(GPIO_DOSIF_2,0);
-            gpio_set_level(GPIO_DOSIF_3,0);
             gpio_set_level(GPIO_BRAZO_SONDAS,0);
             printf("CAMBIO DE ESTADO 0\n");
         }
         else
         {
             estado_motor = 0;    
-            gpio_set_level(GPIO_DOSIF_1,1);
-            gpio_set_level(GPIO_DOSIF_2,1);
-            gpio_set_level(GPIO_DOSIF_3,1);
             gpio_set_level(GPIO_BRAZO_SONDAS,1);
             printf("CAMBIO DE ESTADO 1\n");
         }
-        vTaskDelay(10 / portTICK_PERIOD_MS);
+        vTaskDelay(50 / portTICK_PERIOD_MS);
     }
 }
 
@@ -204,7 +208,7 @@ void navegar_menu(void *pvParameter)
                 //-->Ingresa a la Configuración de WiFi
                 opt_menu=0;
                 pagina_menu=2;
-                vTaskResume(task_handler_5);
+                vTaskResume(task_handler_lcd);
             }
             //-->Si está seleccionada la opción "Ver Status"
             else if(pagina_menu==1 && opt_menu==1)
@@ -212,7 +216,7 @@ void navegar_menu(void *pvParameter)
                 //-->Ingresa a ver la cantidad de días de cosecha y la cantidad restante estimada
                 opt_menu=0;
                 pagina_menu=3;
-                vTaskResume(task_handler_5);
+                vTaskResume(task_handler_lcd);
             }
             //Si el programa está posicionado en el menú de WiFi
             //-->Si está seleccionada la opción "Configuración de SSID"            
@@ -223,7 +227,7 @@ void navegar_menu(void *pvParameter)
                 cursor=0;
                 caracter=SSID[0];
                 pagina_menu=4;
-                vTaskResume(task_handler_5);
+                vTaskResume(task_handler_lcd);
             }       
             //Si el programa está posicionado en el menú de WiFi
             //-->Si está seleccionada la opción "Configuración de PWD"             
@@ -235,14 +239,14 @@ void navegar_menu(void *pvParameter)
                 cursor=0;
                 caracter=PWD[0];
                 pagina_menu=5;
-                vTaskResume(task_handler_5);
+                vTaskResume(task_handler_lcd);
             }   
             //Si se encuentra en la pantalla principal, accede al primer menú           
             else if(pagina_menu==0)
             {
                 opt_menu=0;
                 pagina_menu=1;
-                vTaskResume(task_handler_5);
+                vTaskResume(task_handler_lcd);
             }
             //Si se encuentra en la configuración de SSID o PWD mueve el cursor
             else if(pagina_menu==4 || pagina_menu==5)
@@ -253,7 +257,7 @@ void navegar_menu(void *pvParameter)
                 {
                     cursor=0;
                 }
-                vTaskResume(task_handler_5); 
+                vTaskResume(task_handler_lcd);
             }
         }
         //Se detecta el nivel alto de la entrada antirrebote asociada al pulsador "IZQUIERDA"
@@ -264,21 +268,21 @@ void navegar_menu(void *pvParameter)
             {
                 opt_menu=0;
                 pagina_menu=0;
-                vTaskResume(task_handler_5);
+                vTaskResume(task_handler_lcd);
             }
             //Navega desde la configuración WiFi hacia el primer menú
             if(pagina_menu==2)
             {
                 opt_menu=0;
                 pagina_menu=1;
-                vTaskResume(task_handler_5);
+                vTaskResume(task_handler_lcd);
             }
             //Navega desde "Status" hacia el primer menú
             if(pagina_menu==3)
             {
                 opt_menu=0;
                 pagina_menu=1;
-                vTaskResume(task_handler_5);
+                vTaskResume(task_handler_lcd);
             }
             //Navega desde la configuración de SSID hacia la configuración WiFi
             if(pagina_menu==4)
@@ -297,7 +301,8 @@ void navegar_menu(void *pvParameter)
                 sprintf(WIFI_SSID, "%s", SSID);
                 printf("Se seteó el SSID: %s\n", SSID);   
                 save_wifi_config(); 
-                vTaskResume(task_handler_5);
+                wifi_init();
+                vTaskResume(task_handler_lcd);
             }
             //Navega desde la configuración de PWD hacia la configuración WiFi
             if(pagina_menu==5)
@@ -315,8 +320,9 @@ void navegar_menu(void *pvParameter)
 
                 sprintf(WIFI_SSID, "%s", PWD);
                 printf("Se seteó el PWD: %s\n", PWD);      
-                save_wifi_config();        
-                vTaskResume(task_handler_5);
+                save_wifi_config();
+                wifi_init();
+                vTaskResume(task_handler_lcd);
             }
         }
         //Se detecta el nivel alto de la entrada antirrebote asociada al pulsador "ARRIBA"
@@ -328,7 +334,7 @@ void navegar_menu(void *pvParameter)
                 if(opt_menu==0)
                 {
                     opt_menu=1; 
-                    vTaskResume(task_handler_5);   
+                    vTaskResume(task_handler_lcd); 
                 }
             }
             if(pagina_menu==4 || pagina_menu==5)
@@ -337,7 +343,7 @@ void navegar_menu(void *pvParameter)
                 caracter--;
                 if(caracter=='0')
                     caracter='y';
-                vTaskResume(task_handler_5);
+                vTaskResume(task_handler_lcd);
             }
         }
         //Se detecta el nivel alto de la entrada antirrebote asociada al pulsador "ABAJO"
@@ -349,7 +355,7 @@ void navegar_menu(void *pvParameter)
                 if(opt_menu==1)
                 {
                     opt_menu=0;
-                    vTaskResume(task_handler_5);
+                    vTaskResume(task_handler_lcd);
                 }    
             }
             if(pagina_menu==4 || pagina_menu==5)
@@ -358,7 +364,7 @@ void navegar_menu(void *pvParameter)
                 caracter++;
                 if(caracter=='y')
                     caracter='0';
-                vTaskResume(task_handler_5);
+                vTaskResume(task_handler_lcd);
             }
         }
         vTaskDelay(500 / portTICK_PERIOD_MS);
@@ -378,7 +384,7 @@ void control_lcd(void *pvParameter)
                 printf(">Ingresar al menu\n");
                 lcd_send_string("Bienvenido", LCD_ROW_1);
 	            lcd_send_string(">Ingresar al menu", LCD_ROW_2);
-                vTaskSuspend(task_handler_5);
+                vTaskSuspend(task_handler_lcd);
             }
         }
         if(pagina_menu==1)
@@ -390,7 +396,7 @@ void control_lcd(void *pvParameter)
                 printf(" Ver Status\n");
                 lcd_send_string(">Configurar WiFi", LCD_ROW_1);
 	            lcd_send_string(" Ver Status", LCD_ROW_2);
-                vTaskSuspend(task_handler_5);
+                vTaskSuspend(task_handler_lcd);
             } 
             if(opt_menu==1)
             {
@@ -398,7 +404,7 @@ void control_lcd(void *pvParameter)
                 printf(">Ver Status\n");
                 lcd_send_string(" Configurar WiFi", LCD_ROW_1);
 	            lcd_send_string(">Ver Status", LCD_ROW_2);
-                vTaskSuspend(task_handler_5);
+                vTaskSuspend(task_handler_lcd);
             } 
         }
         if(pagina_menu==2)
@@ -410,7 +416,7 @@ void control_lcd(void *pvParameter)
                 printf(" Configurar PWD\n");
                 lcd_send_string(">Configurar SSID", LCD_ROW_1);
 	            lcd_send_string(" Configurar PWD", LCD_ROW_2);
-                vTaskSuspend(task_handler_5);
+                vTaskSuspend(task_handler_lcd);
             }
             if(opt_menu==1)
             {
@@ -418,7 +424,7 @@ void control_lcd(void *pvParameter)
                 printf(">Configurar PWD\n");
                 lcd_send_string(" Configurar SSID", LCD_ROW_1);
 	            lcd_send_string(">Configurar PWD", LCD_ROW_2);
-                vTaskSuspend(task_handler_5);
+                vTaskSuspend(task_handler_lcd);
             } 
         }
         if(pagina_menu==3)
@@ -429,7 +435,7 @@ void control_lcd(void *pvParameter)
             lcd_send_command(0x01);    
             lcd_send_string("Dias de cosecha: ", LCD_ROW_1);
 	        lcd_send_string("Días restantes: ", LCD_ROW_2);     
-            vTaskSuspend(task_handler_5);       
+            vTaskSuspend(task_handler_lcd);       
         }
         if(pagina_menu==4)
         {            
@@ -439,7 +445,7 @@ void control_lcd(void *pvParameter)
 	        lcd_send_string(SSID, LCD_ROW_2);
             printf("Introducir SSID:\n");
             printf("%s\n", SSID);
-            vTaskSuspend(task_handler_5);            
+            vTaskSuspend(task_handler_lcd);            
         }
         if(pagina_menu==5)
         {
@@ -449,10 +455,8 @@ void control_lcd(void *pvParameter)
 	        lcd_send_string(PWD, LCD_ROW_2);
             printf("Introducir PWD:\n");
             printf("%s\n", PWD);
-            vTaskSuspend(task_handler_5);            
+            vTaskSuspend(task_handler_lcd);            
         }
-
-        vTaskDelay(1 / portTICK_PERIOD_MS);
     }
 }
 
@@ -540,5 +544,113 @@ void firestore_task(void *pvParameter)
         }
 
         vTaskDelay(FIRESTORE_PERIOD_MS / portTICK_PERIOD_MS);
+    }
+}
+
+//Tarea utilizada para navegar en los menúes del display
+void state_machine(void *pvParameter)
+{
+    uint32_t timer_pump_on = 0, timer_pump_off = 0;
+    uint32_t timer_sensado_on = 0;
+    uint8_t motor_sonda_status = 0, pump_status = 0;
+    int i=0;
+    while (1) {
+        switch(machine_state)
+        {
+            case STATE_INIT:
+                printf("Inicializando...\n");
+                //vTaskSuspend(task_handler_adc);
+                //vTaskSuspend(task_handler_firestore);
+                //vTaskSuspend(task_handler_input);
+                //vTaskSuspend(task_handler_menu);
+                //vTaskSuspend(task_handler_lcd);
+                if(init_ok == 1)
+                {
+                    machine_state = STATE_CONN;
+                }
+            break;
+
+            case STATE_CONN:
+                printf("Conectando...\n");
+                if(wifi_connected == 1)
+                {
+                    machine_state = STATE_RUN_CONN;
+                    timer_pump_on = 0;
+                    timer_pump_off = 0;
+                    vTaskResume(task_handler_input);
+                    vTaskResume(task_handler_menu);
+                }
+                else
+                {
+                    i++;
+                    if(i>=20)
+                    {
+                        machine_state = STATE_RUN_NOT_CONN;
+                        timer_pump_on = 0;
+                        timer_pump_off = 0;
+                        vTaskResume(task_handler_input);
+                        vTaskResume(task_handler_menu);
+                    }
+                }
+            break;
+
+            case STATE_RUN_CONN:
+                printf("Funcionando en modo CONEXION\n");
+                //vTaskResume(task_handler_adc);
+                if(pump_status == 0)
+                {
+                    timer_pump_on++;
+                    if(timer_pump_on == 30)
+                    {
+                        pump_status = 1;
+                        timer_pump_on = 0;
+                        gpio_set_level(GPIO_BOMBA_PRINCIPAL, 1);
+                    }
+                }
+                if(pump_status == 1)
+                {
+                    timer_pump_off++;
+                    if(timer_pump_off == 30)
+                    {
+                        pump_status = 0;
+                        timer_pump_off = 0; 
+                        gpio_set_level(GPIO_BOMBA_PRINCIPAL, 0);
+                    }
+                }
+
+                if(motor_sonda_status == 0)
+                    timer_sensado_on++;
+                
+                if(timer_sensado_on == 30)
+                {
+                    timer_sensado_on = 0;
+                    vTaskResume(task_handler_motor); 
+                }
+            break;
+
+            case STATE_RUN_NOT_CONN:
+                printf("Funcionando en modo SIN CONEXION\n");
+                //vTaskResume(task_handler_adc);
+                timer_pump_on++;
+                timer_pump_off++;
+                timer_sensado_on++;
+                if(timer_pump_on == 30)
+                {
+                    timer_pump_off = 0;
+                    gpio_set_level(GPIO_BOMBA_PRINCIPAL, 1);
+                }
+                if(timer_pump_off == 10)
+                {
+                    timer_pump_on = 0; 
+                    gpio_set_level(GPIO_BOMBA_PRINCIPAL, 0);
+                }
+                if(timer_sensado_on == 10)
+                {
+                    timer_sensado_on = 0;
+                    vTaskResume(task_handler_motor); 
+                }
+            break;
+        }
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
 }

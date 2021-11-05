@@ -26,12 +26,12 @@
 #define GPIO_COOL_1             14
 #define GPIO_COOL_2             12
 // BOMBAS
-#define GPIO_BOMBA_PRINCIPAL    13
+#define GPIO_BOMBA_PRINCIPAL    19
 #define GPIO_DOSIF_1            16
 #define GPIO_DOSIF_2            17
 #define GPIO_DOSIF_3            5
 // CALEFACTOR            
-#define GPIO_CALEFACTOR         19
+#define GPIO_CALEFACTOR         13
 // ALIMENTACION SONDAS            
 #define GPIO_ALIMENTACION_AUX   23
 // MOTOR SONDAS            
