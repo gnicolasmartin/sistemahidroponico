@@ -22,14 +22,17 @@
 #include <string.h>
 
 // DEFINES
-#define READPORTS_PERIOD_MS 1
-#define TOGGLED_PERIOD_MS   1000
-#define FIRESTORE_PERIOD_MS 1000
-#define MAX_PAGINAS 3
-#define STATE_INIT           1
-#define STATE_CONN           2
-#define STATE_RUN_CONN       3
-#define STATE_RUN_NOT_CONN   4
+#define READPORTS_PERIOD_MS     1
+#define TOGGLED_PERIOD_MS       1000
+#define FIRESTORE_PERIOD_MS     1000
+#define MAX_PAGINAS             3
+#define STATE_INIT              1
+#define STATE_CONN              2
+#define STATE_RUN_CONN          3
+#define STATE_RUN_NOT_CONN      4
+#define RUNNING                 1
+#define ON                      1
+#define OFF                     0
 
 // PROTOTYPES
 void toggle_led(void *pvParameter);

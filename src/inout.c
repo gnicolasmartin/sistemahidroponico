@@ -62,11 +62,8 @@ void gpio_init(void)
     gpio_pad_select_gpio(GPIO_DOSIF_3);
     gpio_set_direction(GPIO_DOSIF_3,GPIO_MODE_OUTPUT);
 
-    gpio_pad_select_gpio(GPIO_BRAZO_SONDAS);
-    gpio_set_direction(GPIO_BRAZO_SONDAS,GPIO_MODE_OUTPUT);
-
-
-    
+    // gpio_pad_select_gpio(GPIO_BRAZO_SONDAS);                 // DESCOMENTAR PARA QUE FUNCIONE EL NEMA17
+    // gpio_set_direction(GPIO_BRAZO_SONDAS,GPIO_MODE_OUTPUT);  // DESCOMENTAR PARA QUE FUNCIONE EL NEMA17
 
     //Inicializa las estructuras antirrebote
     init_antirrebote();

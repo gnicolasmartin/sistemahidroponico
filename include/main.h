@@ -26,5 +26,15 @@ extern TaskHandle_t task_handler_menu;
 extern TaskHandle_t task_handler_lcd;
 extern TaskHandle_t task_handler_motor;
 
+// ↓ LEVANTARLOS DEL CONFIG FILE EN UN FUTURO ↓
+#define PUMP_TIME_ON            10  // 10min =   600seg
+#define PUMP_TIME_OFF           30  //   1hs =  3600seg
+#define PH_TIME_OFF             30  //  24hs = 86400seg
+#define EC_TIME_OFF             30  //  24hs = 86400seg
+#define HUMIDITY_TIME_OFF       30  //  24hs = 86400seg
+#define TEMPERATURE_TIME_OFF    30  //  24hs = 86400seg
+#define DISPLAY_INACTIVITY      10  //  5min =   300seg
+
+
 
 

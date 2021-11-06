@@ -27,6 +27,117 @@ char caracter='0';
 extern uint8_t wifi_connected;
 extern uint8_t init_ok;
 
+// Maquina de estados del sistema hidroponico
+void state_machine(void *pvParameter)
+{
+    // uint32_t timer_pump= 0;
+    // // uint32_t timer_sensado_on = 0;
+    // // uint8_t motor_sonda_status = 0;
+    // while (RUNNING) 
+    // {
+    //     printf("El valor del timer es: %d\n", timer_pump);
+    //     /** CONTROL TASK: IRRIGATION **/
+    //     if(timer_pump <= PUMP_TIME_OFF)    // APAGADO
+    //     {
+    //         gpio_set_level(GPIO_BOMBA_PRINCIPAL, OFF);
+    //         timer_pump++;
+    //     }
+    //     else if(timer_pump <= PUMP_TIME_OFF + PUMP_TIME_ON) // ENCENDIDO
+    //     {
+    //         gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
+    //         timer_pump++;
+    //     }
+    //     else
+    //     {
+    //         timer_pump= 0;
+    //     }
+
+    //     /** CONTROL TASK: PH **/
+    //     if(timer_ph <= PH_TIME_OFF)    // TIME OFF
+    //     {
+    //         timer_ph++;        
+    //     }
+    //     else  // TIME ON
+    //     {
+    //         PH_STATE= RUNNING;
+            
+    //         if(PH_STATE == RUNNING)
+    //         {   
+    //             timer_ph++;
+    //         }
+    //         else    // FINISHED
+    //         {
+    //             vTaskSuspend();
+    //             timer_ph= 0;
+    //         }
+            
+    //     }
+        
+    //     /** CONTROL TASK: EC **/
+    //     if(timer_pump <= PUMP_TIME_OFF)    // APAGADO
+    //     {
+    //         gpio_set_level(GPIO_BOMBA_PRINCIPAL, OFF);
+    //         timer_pump++;
+    //     }
+    //     else if(timer_pump <= PUMP_TIME_OFF + PUMP_TIME_ON) // ENCENDIDO
+    //     {
+    //         gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
+    //         timer_pump++;
+    //     }
+    //     else
+    //     {
+    //         timer_pump= 0;
+    //     }
+
+    //     /** CONTROL TASK: HUMIDITY **/
+    //     if(timer_pump <= PUMP_TIME_OFF)    // APAGADO
+    //     {
+    //         gpio_set_level(GPIO_BOMBA_PRINCIPAL, OFF);
+    //         timer_pump++;
+    //     }
+    //     else if(timer_pump <= PUMP_TIME_OFF + PUMP_TIME_ON) // ENCENDIDO
+    //     {
+    //         gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
+    //         timer_pump++;
+    //     }
+    //     else
+    //     {
+    //         timer_pump= 0;
+    //     }
+
+    //     /** CONTROL TASK: TEMPERATURE **/
+    //     if(timer_temperature <= PUMP_TIME_OFF)    // APAGADO
+    //     {
+    //         gpio_set_level(GPIO_BOMBA_PRINCIPAL, OFF);
+    //         timer_pump++;
+    //     }
+    //     else if(timer_pump <= PUMP_TIME_OFF + PUMP_TIME_ON) // ENCENDIDO
+    //     {
+    //         gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
+    //         timer_pump++;
+    //     }
+    //     else
+    //     {
+    //         timer_pump= 0;
+    //     }
+
+
+        // printf("Funcionando en modo CONEXION\n");
+        // //vTaskResume(task_handler_adc);        
+
+        // if(motor_sonda_status == 0)
+        //     timer_sensado_on++;
+        
+        // if(timer_sensado_on == 30)
+        // {
+        //     timer_sensado_on = 0;
+        //     // vTaskResume(task_handler_motor); // DESCOMENTAR PARA QUE FUNCIONE EL NEMA17
+        // }
+
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+    // }
+}
+
 //Tarea que lee las entradas implementando antirrebote por Software
 void leer_entradas(void *pvParameter)
 {
@@ -547,110 +658,3 @@ void firestore_task(void *pvParameter)
     }
 }
 
-//Tarea utilizada para navegar en los menúes del display
-void state_machine(void *pvParameter)
-{
-    uint32_t timer_pump_on = 0, timer_pump_off = 0;
-    uint32_t timer_sensado_on = 0;
-    uint8_t motor_sonda_status = 0, pump_status = 0;
-    int i=0;
-    while (1) {
-        switch(machine_state)
-        {
-            case STATE_INIT:
-                printf("Inicializando...\n");
-                //vTaskSuspend(task_handler_adc);
-                //vTaskSuspend(task_handler_firestore);
-                //vTaskSuspend(task_handler_input);
-                //vTaskSuspend(task_handler_menu);
-                //vTaskSuspend(task_handler_lcd);
-                if(init_ok == 1)
-                {
-                    machine_state = STATE_CONN;
-                }
-            break;
-
-            case STATE_CONN:
-                printf("Conectando...\n");
-                if(wifi_connected == 1)
-                {
-                    machine_state = STATE_RUN_CONN;
-                    timer_pump_on = 0;
-                    timer_pump_off = 0;
-                    vTaskResume(task_handler_input);
-                    vTaskResume(task_handler_menu);
-                }
-                else
-                {
-                    i++;
-                    if(i>=20)
-                    {
-                        machine_state = STATE_RUN_NOT_CONN;
-                        timer_pump_on = 0;
-                        timer_pump_off = 0;
-                        vTaskResume(task_handler_input);
-                        vTaskResume(task_handler_menu);
-                    }
-                }
-            break;
-
-            case STATE_RUN_CONN:
-                printf("Funcionando en modo CONEXION\n");
-                //vTaskResume(task_handler_adc);
-                if(pump_status == 0)
-                {
-                    timer_pump_on++;
-                    if(timer_pump_on == 30)
-                    {
-                        pump_status = 1;
-                        timer_pump_on = 0;
-                        gpio_set_level(GPIO_BOMBA_PRINCIPAL, 1);
-                    }
-                }
-                if(pump_status == 1)
-                {
-                    timer_pump_off++;
-                    if(timer_pump_off == 30)
-                    {
-                        pump_status = 0;
-                        timer_pump_off = 0; 
-                        gpio_set_level(GPIO_BOMBA_PRINCIPAL, 0);
-                    }
-                }
-
-                if(motor_sonda_status == 0)
-                    timer_sensado_on++;
-                
-                if(timer_sensado_on == 30)
-                {
-                    timer_sensado_on = 0;
-                    vTaskResume(task_handler_motor); 
-                }
-            break;
-
-            case STATE_RUN_NOT_CONN:
-                printf("Funcionando en modo SIN CONEXION\n");
-                //vTaskResume(task_handler_adc);
-                timer_pump_on++;
-                timer_pump_off++;
-                timer_sensado_on++;
-                if(timer_pump_on == 30)
-                {
-                    timer_pump_off = 0;
-                    gpio_set_level(GPIO_BOMBA_PRINCIPAL, 1);
-                }
-                if(timer_pump_off == 10)
-                {
-                    timer_pump_on = 0; 
-                    gpio_set_level(GPIO_BOMBA_PRINCIPAL, 0);
-                }
-                if(timer_sensado_on == 10)
-                {
-                    timer_sensado_on = 0;
-                    vTaskResume(task_handler_motor); 
-                }
-            break;
-        }
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    }
-}
