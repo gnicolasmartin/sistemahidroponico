@@ -13,7 +13,6 @@
 #include "driver/gpio.h"
 #include <unistd.h>
 
-
 // DEFINES
 #define SENSOR_NIVEL_PRI        36
 #define SENSOR_NIVEL_SEC        39
@@ -50,6 +49,8 @@
 void init_antirrebote(void);
 void gpio_init(void);
 void motor_sonda(int dir);
+void regular_ph(void);
+void regular_ec(void);
 
 // STRUCTS
 typedef struct antirrebote_t{

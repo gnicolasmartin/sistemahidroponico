@@ -13,7 +13,7 @@
 #include "tasks.h"
 
 uint8_t machine_state = STATE_INIT;
-TaskHandle_t task_handler_motor, task_handler_firestore, task_handler_adc, task_handler_input, task_handler_menu, task_handler_lcd;
+TaskHandle_t task_handler_motor, task_handler_firestore, task_handler_regulate_water, task_handler_input, task_handler_menu, task_handler_lcd;
 
 //Variables para el manejo de menúes
 uint8_t pagina_menu=0;
@@ -123,7 +123,7 @@ void state_machine(void *pvParameter)
 
 
         // printf("Funcionando en modo CONEXION\n");
-        // //vTaskResume(task_handler_adc);        
+        // //vTaskResume(task_handler_regulate_water);        
 
         // if(motor_sonda_status == 0)
         //     timer_sensado_on++;
@@ -139,7 +139,7 @@ void state_machine(void *pvParameter)
 }
 
 //Tarea que lee las entradas implementando antirrebote por Software
-void leer_entradas(void *pvParameter)
+void leer_botones(void *pvParameter)
 {
     uint32_t i;
     while(1)
@@ -231,55 +231,85 @@ void toggle_led(void *pvParameter)
     }
 }
 
-void leer_adc(void *pvParameter)
+void regular_agua(void *pvParameter)
 {
-    while (1) {
-        //PH
-        uint32_t adc_reading = 0;
-        //Multisampling
-        for (int i = 0; i < NO_OF_SAMPLES; i++) {
-            if (unit_ph == ADC_UNIT_1) {
-                adc_reading += adc1_get_raw((adc1_channel_t)channel_ph);
-            } else {
-                int raw;
-                adc2_get_raw((adc2_channel_t)channel_ph, width, &raw);
-                adc_reading += raw;
-            }
-            usleep(10000);
-        }
-        adc_reading /= NO_OF_SAMPLES;
-        //Convert adc_reading to voltage in mV
-        int32_t voltage_ph = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars_ph);
-        int32_t ph_value = 23.3 - 0.008*adc_reading;
-        printf("Raw: %d\tVoltage: %dmV\t PH: %d\n", adc_reading, voltage_ph, ph_value);
+    motor_sonda(DEGREE_90_DOWN);
+    gpio_set_level(GPIO_ALIMENTACION_AUX, ON);
 
-        //Electroconductividad
-        adc_reading = 0;
-        //Multisampling
-        for (int i = 0; i < NO_OF_SAMPLES; i++) {
-            if (unit_ec == ADC_UNIT_1) {
-                adc_reading += adc1_get_raw((adc1_channel_t)channel_ec);
-            } else {
-                int raw;
-                adc2_get_raw((adc2_channel_t)channel_ec, width, &raw);
-                adc_reading += raw;
-            }
-        }
-        adc_reading /= NO_OF_SAMPLES;
-        //Convert adc_reading to voltage in mV
-        float voltage_ec = ((float)esp_adc_cal_raw_to_voltage(adc_reading, adc_chars_ec))/1000;
-        float ec_value;
-        if(voltage_ec < 2)
+    sleep(SONDA_STABILIZATION_TIME);
+    static int ESTADO= MEASURE;
+
+    while (1) 
+    {
+        switch(ESTADO)
         {
-            ec_value = -25396.38 + 49819.3*voltage_ec - 31647.61*pow(voltage_ec,2) + 6685.308*pow(voltage_ec,3);
+            case MEASURE:
+
+                medir_ph();
+                medir_ec();
+
+                ESTADO= ANALYZE;
+
+            break;
+
+            case ANALYZE:
+                
+                if(analizar_ph() == DESREGULATED)
+                {
+                    ESTADO= REGULATE_PH;
+                }
+                else if(analizar_ec() == DESREGULATED)
+                {
+                    ESTADO= REGULATE_EC;
+                }
+                else
+                {
+                    ESTADO= REGULATED;
+                }
+
+            break;
+
+            case REGULATE_PH:
+                
+                regular_ph();
+                ESTADO= MIX_WATER;
+
+            break;
+
+            case REGULATE_EC:
+
+                regular_ec();
+                ESTADO= MIX_WATER;
+
+            break;
+
+            case MIX_WATER:
+
+                gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
+                sleep(WATER_STABILIZATION_TIME/5);
+                gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
+                sleep(WATER_STABILIZATION_TIME/5);
+                gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
+                sleep(WATER_STABILIZATION_TIME/5);
+                gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
+                sleep(WATER_STABILIZATION_TIME/5);
+                gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
+                sleep(WATER_STABILIZATION_TIME/5);
+
+                gpio_set_level(GPIO_BOMBA_PRINCIPAL, OFF);
+
+                ESTADO= MEASURE;
+
+            break;
+
+            case REGULATED:
+
+                motor_sonda(DEGREE_90_UP);
+                gpio_set_level(GPIO_ALIMENTACION_AUX, OFF);
+                vTaskSuspend(NULL); // Tarea "regular agua" se autosuspende
+
+            break;
         }
-        else
-        {
-            ec_value = -30282000 + 44892160*voltage_ec - 22189180*pow(voltage_ec,2) + 3656986*pow(voltage_ec,3);   
-        }
-        
-        printf("Raw: %d\tVoltage: %fV\t EC: %fppm\n", adc_reading, voltage_ec, ec_value);
-        vTaskDelay(3000 / portTICK_PERIOD_MS);
     }
 }
 

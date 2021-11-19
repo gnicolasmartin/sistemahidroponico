@@ -68,6 +68,9 @@ void gpio_init(void)
     gpio_pad_select_gpio(DIR_BRAZO_SONDAS);                 
     gpio_set_direction(DIR_BRAZO_SONDAS,GPIO_MODE_OUTPUT);  
 
+    gpio_pad_select_gpio(GPIO_ALIMENTACION_AUX);                 
+    gpio_set_direction(GPIO_ALIMENTACION_AUX,GPIO_MODE_OUTPUT); 
+
     //Inicializa las estructuras antirrebote
     init_antirrebote();
 }
@@ -111,4 +114,14 @@ void motor_sonda(int dir)
     
         i++;
     }
+}
+
+void regular_ph(void)
+{
+    // Activar el GPIO de la bomba de acido acidulante
+}
+
+void regular_ec(void)
+{
+    // Activar el GPIO de la bomba de solucion A y B
 }

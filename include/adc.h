@@ -12,11 +12,40 @@
 // INCLUDES
 #include "driver/adc.h"
 #include "esp_adc_cal.h"
+#include <unistd.h>
+#include <math.h>
 
 // DEFINES
-#define DEFAULT_VREF    1100
-#define NO_OF_SAMPLES   64 
+#define DEFAULT_VREF             1100
+#define NO_OF_SAMPLES            64 
+#define SONDA_STABILIZATION_TIME 60    // in seconds
+#define WATER_STABILIZATION_TIME 300   // in seconds (5 min)
+// Machine state "regular_agua" task
+#define MEASURE                 1
+#define ANALYZE                 2
+#define REGULATE_PH             3
+#define REGULATE_EC             4
+#define MIX_WATER               5
+// Status of measurement
+#define REGULATED               0        
+#define DESREGULATED            1
+
+// Valores de parametros (ESTO TIENE QUE IR EN UN ARCHIVO DE CONFIGURACION! Y TIENE QUE ACTUALIZARSE LOS VALORES DEFAULT CON LAS BASE DE DATOS)
+// Lechuga
+// Tomate
+// Acelga
+// Espinaca
+#define SELECTED_PLANT  0 // ESTE VALOR PODRIA SER DINAMICO Y QUE LO LEVANTE DE LA BASE DE DATOS!
+#define CANT_PLANTAS    4 // ESTE VALOR PODRIA SER DINAMICO Y QUE LO LEVANTE DE LA BASE DE DATOS!
+#define LECHUGA         0
+#define TOMATE          1
+#define ACELGA          2
+#define ESPINACA        3
 
 // PROTOTYPES
 void print_char_val_type(esp_adc_cal_value_t);
 void adc_init(void);
+void medir_ph(void);
+void medir_ec(void);
+int analizar_ph(void);
+int analizar_ec(void);

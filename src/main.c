@@ -36,8 +36,8 @@ void app_main()
 
     /************** Variables **************/
     // Timers
-    int timer_pump, timer_ph, timer_ec, timer_humidity, timer_temperature, timer_display, timer_H20_measure;
-    timer_pump= timer_ph= timer_ec= timer_humidity= timer_temperature= timer_display= timer_H20_measure= 0;
+    int timer_pump, timer_ph, timer_ec, timer_humidity, timer_temperature, timer_display, timer_regulate_water;
+    timer_pump= timer_ph= timer_ec= timer_humidity= timer_temperature= timer_display= timer_regulate_water= 0;
 
     // Quizas no conviene inicializalos en CERO para no tener que esperar 24hs a que corra... ¿Y si empiezan en su valor maximo?¿Correrian todas las tareas juntas?
     // States
@@ -46,12 +46,12 @@ void app_main()
 
     /*********** Task Declaration **********/
     // Start running
-    xTaskCreate(&leer_entradas, "leer_entradas", 1024, NULL, 1, &task_handler_input);
+    xTaskCreate(&leer_botones, "leer_botones", 1024, NULL, 1, &task_handler_input);
     xTaskCreate(&navegar_menu, "navegar_menu", 10240, NULL, 1, &task_handler_menu);
     xTaskCreate(&control_lcd, "control_lcd", 4096, NULL, 2, &task_handler_lcd);
     // Start suspended
-    xTaskCreate(&leer_adc, "leer_adc", 4096, NULL, 2, &task_handler_adc);
-    vTaskSuspend(task_handler_adc);
+    xTaskCreate(&regular_agua, "regular_agua", 4096, NULL, 2, &task_handler_regulate_water);
+    vTaskSuspend(task_handler_regulate_water);
     // xTaskCreate(&firestore_task,"firestore", 10240, NULL, 4, &task_handler_firestore);
     // vTaskSuspend(task_handler_firestore);
 
@@ -70,12 +70,12 @@ void app_main()
         timer_humidity++;
         timer_temperature++;
         timer_display++;
-        timer_H20_measure++;
+        timer_regulate_water++;
 
         /** CONTROL TASK: DISPLAY **/
         if(timer_display > DISPLAY_INACTIVITY)    // APAGADO
         {
-            // Quizas la tarea leer_entradas puede reiniciar el timer_display cada vez que presionan un boton...
+            // Quizas la tarea leer_botones puede reiniciar el timer_display cada vez que presionan un boton...
 
             // ↓ BORRAR LO QUE VENGA APARTIR DE AHORA ↓
             if (timer_display == DISPLAY_INACTIVITY)
@@ -104,55 +104,16 @@ void app_main()
             timer_pump= 0;
         }
 
-        /** CONTROL TASK: H20 MEASURE **/
-        if(timer_H20_measure < H20_TIME_OFF)    // APAGADO
+        /** CONTROL TASK: WATER MEASURE **/
+        if(timer_regulate_water > REGULATE_WATER_TIME_OFF)  // TIME ON
         {
-            // ↓ BORRAR LO QUE VENGA APARTIR DE AHORA ↓
-            if (timer_H20_measure == 1)
-                motor_sonda(DEGREE_90_UP);
-        }
-        else if(timer_H20_measure < H20_TIME_OFF + H20_TIME_ON) // ENCENDIDO
-        {
-            // ↓ BORRAR LO QUE VENGA APARTIR DE AHORA ↓
-            if (timer_H20_measure == H20_TIME_OFF+1)
-                motor_sonda(DEGREE_90_DOWN);
-        }
-        else
-        {
-            timer_H20_measure= 0;
-        }
+            vTaskResume(task_handler_regulate_water);
 
-        /** CONTROL TASK: PH **/
-        if(timer_ph <= PH_TIME_OFF)    // TIME OFF
-        {
-            // timer_ph++;        
-        }
-        else  // TIME ON
-        {
-            // timer_ph++;
-            vTaskResume(task_handler_adc);
-
-            if(eTaskStateeTaskGetState(task_handler_adc) == eSuspended) // TASK AUTO SUSPEND THEIR SELF WHEN FINISH
+            if(eTaskGetState(task_handler_regulate_water) == eSuspended) // TASK AUTO SUSPEND THEIR SELF WHEN FINISH
             {
-                timer_ph= 0;                
+                timer_regulate_water= 0;                
             }
         }
-        
-    //     /** CONTROL TASK: EC **/
-    //     if(timer_ec <= EC_TIME_OFF)    // TIME OFF
-    //     {
-    //         timer_ec++;        
-    //     }
-    //     else  // TIME ON
-    //     {
-    //         timer_ec++;
-    //         vTaskResume(task_handler_adc);
-
-    //         if(eTaskStateeTaskGetState(task_handler_adc) == eSuspended) // TASK AUTO SUSPEND THEIR SELF WHEN FINISH
-    //         {
-    //             timer_ec= 0;                
-    //         }
-    //     }
 
     //     /** CONTROL TASK: HUMIDITY **/
     //     if(timer_humidity <= HUMIDITY_TIME_OFF)    // TIME OFF
@@ -162,9 +123,9 @@ void app_main()
     //     else  // TIME ON
     //     {
     //         timer_humidity++;
-    //         vTaskResume(task_handler_adc);
+    //         vTaskResume(task_handler_regulate_water);
 
-    //         if(eTaskStateeTaskGetState(task_handler_adc) == eSuspended) // TASK AUTO SUSPEND THEIR SELF WHEN FINISH
+    //         if(eTaskGetState (task_handler_regulate_water) == eSuspended) // TASK AUTO SUSPEND THEIR SELF WHEN FINISH
     //         {
     //             timer_humidity= 0;                
     //         }
@@ -178,9 +139,9 @@ void app_main()
     //     else  // TIME ON
     //     {
     //         timer_temperature++;
-    //         vTaskResume(task_handler_adc);
+    //         vTaskResume(task_handler_regulate_water);
 
-    //         if(eTaskStateeTaskGetState(task_handler_adc) == eSuspended) // TASK AUTO SUSPEND THEIR SELF WHEN FINISH
+    //         if(eTaskGetState (task_handler_regulate_water) == eSuspended) // TASK AUTO SUSPEND THEIR SELF WHEN FINISH
     //         {
     //             timer_temperature= 0;                
     //         }

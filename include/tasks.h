@@ -37,8 +37,8 @@
 
 // PROTOTYPES
 void toggle_led(void *pvParameter);
-void leer_entradas(void *pvParameter);
-void leer_adc(void *pvParameter);
+void leer_botones(void *pvParameter);
+void regular_agua(void *pvParameter);
 void navegar_menu(void *pvParameter);
 void control_lcd(void *pvParameter);
 void firestore_task(void *pvParameter);

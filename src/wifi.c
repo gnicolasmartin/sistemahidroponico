@@ -198,7 +198,8 @@ void wifi_scan(void)
     ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(&ap_count));
 
     printf("Total APs scanned = %u\n", ap_count);
-    for (int i = 0; (i < DEFAULT_SCAN_LIST_SIZE) && (i < ap_count); i++) {
+    for (int i = 0; (i < DEFAULT_SCAN_LIST_SIZE) && (i < ap_count); i++) 
+    {
         printf("SSID \t\t%s\n", ap_info[i].ssid);
         sprintf(WIFI_SSIDS[i],"%s", ap_info[i].ssid);
         printf("Las redes son %s\n", WIFI_SSIDS[i]);
