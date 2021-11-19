@@ -26,7 +26,7 @@ void app_main()
     /************ Initialization ************/
     nvs_flash_init();
     gpio_init();
-    //adc_init();
+    adc_init();
     lcd_init();
     fs_init(&conf); 
     // wifi_init();    // primero inicializar el FS para poder levantar el archivo de configuración del wifi
@@ -50,14 +50,13 @@ void app_main()
     xTaskCreate(&navegar_menu, "navegar_menu", 10240, NULL, 1, &task_handler_menu);
     xTaskCreate(&control_lcd, "control_lcd", 4096, NULL, 2, &task_handler_lcd);
     // Start suspended
-    // xTaskCreate(&leer_adc_ec, "leer_adc_ec", 4096, NULL, 2, &task_handler_adc);
-    // vTaskSuspend(task_handler_adc);
+    xTaskCreate(&leer_adc, "leer_adc", 4096, NULL, 2, &task_handler_adc);
+    vTaskSuspend(task_handler_adc);
     // xTaskCreate(&firestore_task,"firestore", 10240, NULL, 4, &task_handler_firestore);
     // vTaskSuspend(task_handler_firestore);
 
     // EN DUDA SI QUEDAN O NO
     //xTaskCreate(&toggle_led, "toggle_led", 1024, NULL, 1, NULL);
-    // xTaskCreate(&state_machine,"state_machine", 10240, NULL, 3, NULL); 
     
 
 

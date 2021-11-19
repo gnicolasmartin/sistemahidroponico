@@ -231,48 +231,55 @@ void toggle_led(void *pvParameter)
     }
 }
 
-void leer_adc_ph(void *pvParameter)
+void leer_adc(void *pvParameter)
 {
     while (1) {
+        //PH
         uint32_t adc_reading = 0;
         //Multisampling
         for (int i = 0; i < NO_OF_SAMPLES; i++) {
-            if (unit == ADC_UNIT_1) {
-                adc_reading += adc1_get_raw((adc1_channel_t)channel);
+            if (unit_ph == ADC_UNIT_1) {
+                adc_reading += adc1_get_raw((adc1_channel_t)channel_ph);
             } else {
                 int raw;
-                adc2_get_raw((adc2_channel_t)channel, width, &raw);
+                adc2_get_raw((adc2_channel_t)channel_ph, width, &raw);
                 adc_reading += raw;
             }
+            usleep(10000);
         }
         adc_reading /= NO_OF_SAMPLES;
         //Convert adc_reading to voltage in mV
-        uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
-        uint32_t ph_value = 23.3 - 0.008*adc_reading;
-        printf("Raw: %d\tVoltage: %dmV\t PH: %d\n", adc_reading, voltage, ph_value);
-        vTaskDelay(3000 / portTICK_PERIOD_MS);
-    }
-}
+        int32_t voltage_ph = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars_ph);
+        int32_t ph_value = 23.3 - 0.008*adc_reading;
+        printf("Raw: %d\tVoltage: %dmV\t PH: %d\n", adc_reading, voltage_ph, ph_value);
 
-void leer_adc_ec(void *pvParameter)
-{
-    while (1) {
-        uint32_t adc_reading = 0;
+        //Electroconductividad
+        adc_reading = 0;
         //Multisampling
         for (int i = 0; i < NO_OF_SAMPLES; i++) {
-            if (unit == ADC_UNIT_1) {
-                adc_reading += adc1_get_raw((adc1_channel_t)channel);
+            if (unit_ec == ADC_UNIT_1) {
+                adc_reading += adc1_get_raw((adc1_channel_t)channel_ec);
             } else {
                 int raw;
-                adc2_get_raw((adc2_channel_t)channel, width, &raw);
+                adc2_get_raw((adc2_channel_t)channel_ec, width, &raw);
                 adc_reading += raw;
             }
         }
         adc_reading /= NO_OF_SAMPLES;
         //Convert adc_reading to voltage in mV
-        uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
-        printf("Raw: %d\tVoltage: %dmV\t\n", adc_reading, voltage);
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        float voltage_ec = ((float)esp_adc_cal_raw_to_voltage(adc_reading, adc_chars_ec))/1000;
+        float ec_value;
+        if(voltage_ec < 2)
+        {
+            ec_value = -25396.38 + 49819.3*voltage_ec - 31647.61*pow(voltage_ec,2) + 6685.308*pow(voltage_ec,3);
+        }
+        else
+        {
+            ec_value = -30282000 + 44892160*voltage_ec - 22189180*pow(voltage_ec,2) + 3656986*pow(voltage_ec,3);   
+        }
+        
+        printf("Raw: %d\tVoltage: %fV\t EC: %fppm\n", adc_reading, voltage_ec, ec_value);
+        vTaskDelay(3000 / portTICK_PERIOD_MS);
     }
 }
 
