@@ -26,7 +26,7 @@ void app_main()
     /************ Initialization ************/
     nvs_flash_init();
     gpio_init();
-    //adc_init();
+    adc_init();
     lcd_init();
     fs_init(&conf); 
     wifi_init();    // primero inicializar el FS para poder levantar el archivo de configuración del wifi
@@ -49,7 +49,7 @@ void app_main()
     // Start suspended
     // xTaskCreate(&motor_sonda,"motor_sonda", 4096, NULL, 2, &task_handler_motor); // DESCOMENTAR PARA QUE FUNCIONE EL NEMA17
     // vTaskSuspend(task_handler_motor);    // DESCOMENTAR PARA QUE FUNCIONE EL NEMA17
-    // xTaskCreate(&leer_adc_ec, "leer_adc_ec", 4096, NULL, 2, &task_handler_adc);
+    xTaskCreate(&leer_adc, "leer_adc", 4096, NULL, 2, &task_handler_adc);
     // vTaskSuspend(task_handler_adc);
     // xTaskCreate(&firestore_task,"firestore", 10240, NULL, 4, &task_handler_firestore);
     // vTaskSuspend(task_handler_firestore);
