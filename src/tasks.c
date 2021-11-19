@@ -231,34 +231,6 @@ void toggle_led(void *pvParameter)
     }
 }
 
-void motor_sonda(void *pvParameter)
-{
-    uint8_t estado_motor = 0;
-    uint8_t i = 0;
-    while(1)
-    {
-        i++;
-        if(i>90)
-        {
-            i=0;
-            vTaskSuspend(task_handler_motor);
-        }
-        if(estado_motor == 0)
-        {
-            estado_motor = 1;
-            gpio_set_level(GPIO_BRAZO_SONDAS,0);
-            printf("CAMBIO DE ESTADO 0\n");
-        }
-        else
-        {
-            estado_motor = 0;    
-            gpio_set_level(GPIO_BRAZO_SONDAS,1);
-            printf("CAMBIO DE ESTADO 1\n");
-        }
-        vTaskDelay(50 / portTICK_PERIOD_MS);
-    }
-}
-
 void leer_adc_ph(void *pvParameter)
 {
     while (1) {
@@ -333,6 +305,10 @@ void navegar_menu(void *pvParameter)
             //-->Si está seleccionada la opción "Configuración de SSID"            
             else if(pagina_menu==2 && opt_menu==0)
             {
+                // escanea las redes que hay disponibles
+                wifi_scan();
+                // printf("Las redes son %s\n", WIFI_SSIDS[0]);
+
                 //Posiciona el cursor en el primer elemento del vector de seteo e ingresa a la configuración de SSID
                 opt_menu=0;
                 cursor=0;
@@ -399,7 +375,8 @@ void navegar_menu(void *pvParameter)
             if(pagina_menu==4)
             {
                 opt_menu=0;
-                pagina_menu=2;
+                pagina_menu=2;                
+                
                 //Busca el final del SSID seteado y almacena el valor en char * que se usará para la conexión
                 for(i=0;i<16;i++)
                 {
@@ -657,4 +634,3 @@ void firestore_task(void *pvParameter)
         vTaskDelay(FIRESTORE_PERIOD_MS / portTICK_PERIOD_MS);
     }
 }
-

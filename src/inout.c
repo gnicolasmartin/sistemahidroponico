@@ -62,8 +62,11 @@ void gpio_init(void)
     gpio_pad_select_gpio(GPIO_DOSIF_3);
     gpio_set_direction(GPIO_DOSIF_3,GPIO_MODE_OUTPUT);
 
-    // gpio_pad_select_gpio(GPIO_BRAZO_SONDAS);                 // DESCOMENTAR PARA QUE FUNCIONE EL NEMA17
-    // gpio_set_direction(GPIO_BRAZO_SONDAS,GPIO_MODE_OUTPUT);  // DESCOMENTAR PARA QUE FUNCIONE EL NEMA17
+    gpio_pad_select_gpio(GPIO_BRAZO_SONDAS);                 
+    gpio_set_direction(GPIO_BRAZO_SONDAS,GPIO_MODE_OUTPUT);  
+
+    gpio_pad_select_gpio(DIR_BRAZO_SONDAS);                 
+    gpio_set_direction(DIR_BRAZO_SONDAS,GPIO_MODE_OUTPUT);  
 
     //Inicializa las estructuras antirrebote
     init_antirrebote();
@@ -79,5 +82,33 @@ void init_antirrebote(void)
         entradas_antirrebote[i].estado_actual=1;      
         entradas_antirrebote[i].estado_anterior=1;
         entradas_antirrebote[i].level=1;     
+    }
+}
+
+// Control del NEMA17 (Motor para movimiento de sondas)
+void motor_sonda(int dir)
+{
+    uint8_t i = 0;  
+    // 2 i -> 1 paso -> 1.8 grados
+    // 100 i -> 50 pasos -> 90 grados
+    
+    gpio_set_level(DIR_BRAZO_SONDAS, dir);
+
+    while(i < DEGREE_90_NEMA17)
+    {
+        if( i % 2 == 0 )
+        {
+            gpio_set_level(GPIO_BRAZO_SONDAS, 0);
+            // printf("CAMBIO DE ESTADO 0\n");
+        }
+        else
+        {
+            gpio_set_level(GPIO_BRAZO_SONDAS, 1);
+            // printf("CAMBIO DE ESTADO 1\n");
+        }
+        
+        usleep(50000); // dormimos 50ms (velocidad de giro)
+    
+        i++;
     }
 }

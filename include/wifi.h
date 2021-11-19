@@ -31,6 +31,7 @@
 #define APP_WIFI_FAIL_BIT       BIT1
 #define MAX_LENGTH_SSID         16
 #define MAX_LENGTH_PSWD         16
+#define DEFAULT_SCAN_LIST_SIZE  10
 // WiFi Credentials
 #define SSID_HARDCODEADO "Telecentro-1188_EXT"
 #define PASSWORD_HARDCODEADO "poligono425"
@@ -51,5 +52,8 @@ void wifi_wait(void);
 void wifi_event_handler(void* pvArg, esp_event_base_t pcEventBase, int32_t s32EventId, void* pvEventData);
 int save_wifi_config(void);
 int load_wifi_config(void);
+void wifi_scan(void);
+void print_cipher_type(int pairwise_cipher, int group_cipher);
+void print_auth_mode(int authmode);
 
 #endif /* WIFI_H_ */

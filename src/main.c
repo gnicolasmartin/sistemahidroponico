@@ -29,13 +29,16 @@ void app_main()
     //adc_init();
     lcd_init();
     fs_init(&conf); 
-    wifi_init();    // primero inicializar el FS para poder levantar el archivo de configuración del wifi
-    //wifi_wait();
+    // wifi_init();    // primero inicializar el FS para poder levantar el archivo de configuración del wifi
+    // wifi_wait();
+    wifi_scan();
+    printf("Las redes son %s\n", WIFI_SSIDS[0]);
 
     /************** Variables **************/
     // Timers
-    int timer_pump, timer_ph, timer_ec, timer_humidity, timer_temperature, timer_display;
-    timer_pump= timer_ph= timer_ec= timer_humidity= timer_temperature= timer_display= 0;
+    int timer_pump, timer_ph, timer_ec, timer_humidity, timer_temperature, timer_display, timer_H20_measure;
+    timer_pump= timer_ph= timer_ec= timer_humidity= timer_temperature= timer_display= timer_H20_measure= 0;
+
     // Quizas no conviene inicializalos en CERO para no tener que esperar 24hs a que corra... ¿Y si empiezan en su valor maximo?¿Correrian todas las tareas juntas?
     // States
     bool ph_task_on, ec_task_on, humidity_task_on, temperature_task_on;
@@ -47,8 +50,6 @@ void app_main()
     xTaskCreate(&navegar_menu, "navegar_menu", 10240, NULL, 1, &task_handler_menu);
     xTaskCreate(&control_lcd, "control_lcd", 4096, NULL, 2, &task_handler_lcd);
     // Start suspended
-    // xTaskCreate(&motor_sonda,"motor_sonda", 4096, NULL, 2, &task_handler_motor); // DESCOMENTAR PARA QUE FUNCIONE EL NEMA17
-    // vTaskSuspend(task_handler_motor);    // DESCOMENTAR PARA QUE FUNCIONE EL NEMA17
     // xTaskCreate(&leer_adc_ec, "leer_adc_ec", 4096, NULL, 2, &task_handler_adc);
     // vTaskSuspend(task_handler_adc);
     // xTaskCreate(&firestore_task,"firestore", 10240, NULL, 4, &task_handler_firestore);
@@ -70,6 +71,7 @@ void app_main()
         timer_humidity++;
         timer_temperature++;
         timer_display++;
+        timer_H20_measure++;
 
         /** CONTROL TASK: DISPLAY **/
         if(timer_display > DISPLAY_INACTIVITY)    // APAGADO
@@ -103,21 +105,39 @@ void app_main()
             timer_pump= 0;
         }
 
-    //     /** CONTROL TASK: PH **/
-    //     if(timer_ph <= PH_TIME_OFF)    // TIME OFF
-    //     {
-    //         timer_ph++;        
-    //     }
-    //     else  // TIME ON
-    //     {
-    //         timer_ph++;
-    //         vTaskResume(task_handler_adc);
+        /** CONTROL TASK: H20 MEASURE **/
+        if(timer_H20_measure < H20_TIME_OFF)    // APAGADO
+        {
+            // ↓ BORRAR LO QUE VENGA APARTIR DE AHORA ↓
+            if (timer_H20_measure == 1)
+                motor_sonda(DEGREE_90_UP);
+        }
+        else if(timer_H20_measure < H20_TIME_OFF + H20_TIME_ON) // ENCENDIDO
+        {
+            // ↓ BORRAR LO QUE VENGA APARTIR DE AHORA ↓
+            if (timer_H20_measure == H20_TIME_OFF+1)
+                motor_sonda(DEGREE_90_DOWN);
+        }
+        else
+        {
+            timer_H20_measure= 0;
+        }
 
-    //         if(eTaskStateeTaskGetState(task_handler_adc) == eSuspended) // TASK AUTO SUSPEND THEIR SELF WHEN FINISH
-    //         {
-    //             timer_ph= 0;                
-    //         }
-    //     }
+        /** CONTROL TASK: PH **/
+        if(timer_ph <= PH_TIME_OFF)    // TIME OFF
+        {
+            // timer_ph++;        
+        }
+        else  // TIME ON
+        {
+            // timer_ph++;
+            vTaskResume(task_handler_adc);
+
+            if(eTaskStateeTaskGetState(task_handler_adc) == eSuspended) // TASK AUTO SUSPEND THEIR SELF WHEN FINISH
+            {
+                timer_ph= 0;                
+            }
+        }
         
     //     /** CONTROL TASK: EC **/
     //     if(timer_ec <= EC_TIME_OFF)    // TIME OFF

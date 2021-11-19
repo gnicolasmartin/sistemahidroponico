@@ -11,6 +11,8 @@
 
 // INCLUDES
 #include "driver/gpio.h"
+#include <unistd.h>
+
 
 // DEFINES
 #define SENSOR_NIVEL_PRI        36
@@ -35,7 +37,11 @@
 // ALIMENTACION SONDAS            
 #define GPIO_ALIMENTACION_AUX   23
 // MOTOR SONDAS            
+#define DIR_BRAZO_SONDAS        15
 #define GPIO_BRAZO_SONDAS       18
+#define DEGREE_90_NEMA17       100
+#define DEGREE_90_UP            0
+#define DEGREE_90_DOWN          1
 // DHT11            
 #define GPIO_SENSOR_TEMP        4
 
@@ -43,6 +49,7 @@
 // PROTOTYPES
 void init_antirrebote(void);
 void gpio_init(void);
+void motor_sonda(int dir);
 
 // STRUCTS
 typedef struct antirrebote_t{

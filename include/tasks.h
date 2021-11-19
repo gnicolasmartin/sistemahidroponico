@@ -36,7 +36,6 @@
 
 // PROTOTYPES
 void toggle_led(void *pvParameter);
-void motor_sonda(void *pvParameter);
 void leer_entradas(void *pvParameter);
 void leer_adc_ph(void *pvParameter);
 void leer_adc_ec(void *pvParameter);
@@ -57,5 +56,6 @@ extern const adc_unit_t unit;
 //wifi
 extern char WIFI_SSID[MAX_LENGTH_SSID]; 
 extern char WIFI_PSWD[MAX_LENGTH_PSWD];
+extern char WIFI_SSIDS[3][MAX_LENGTH_SSID];
 
 
