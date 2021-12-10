@@ -31,18 +31,15 @@ void app_main()
     fs_init(&conf); 
     // wifi_init();    // primero inicializar el FS para poder levantar el archivo de configuración del wifi
     // wifi_wait();
-    wifi_scan();
-    printf("Las redes son %s\n", WIFI_SSIDS[0]);
 
     /************** Variables **************/
-    // Timers
+    // Timers declaration
     int timer_pump, timer_ph, timer_ec, timer_humidity, timer_temperature, timer_display, timer_regulate_water;
+
+    // Timers initialization
+    // Quizas no conviene inicializalos en CERO para no tener que esperar 24hs a que corra... ¿Y si empiezan en su valor maximo?¿Correrian todas las tareas juntas?
     timer_pump= timer_ph= timer_ec= timer_humidity= timer_temperature= timer_display= timer_regulate_water= 0;
 
-    // Quizas no conviene inicializalos en CERO para no tener que esperar 24hs a que corra... ¿Y si empiezan en su valor maximo?¿Correrian todas las tareas juntas?
-    // States
-    bool ph_task_on, ec_task_on, humidity_task_on, temperature_task_on;
-    ph_task_on= ec_task_on= humidity_task_on= temperature_task_on= false;
 
     /*********** Task Declaration **********/
     // Start running
@@ -58,8 +55,6 @@ void app_main()
     // EN DUDA SI QUEDAN O NO
     //xTaskCreate(&toggle_led, "toggle_led", 1024, NULL, 1, NULL);
     
-
-
     /************** Main loop **************/
     while(RUNNING)
     {
@@ -106,11 +101,12 @@ void app_main()
 
         /** CONTROL TASK: WATER MEASURE **/
         if(timer_regulate_water > REGULATE_WATER_TIME_OFF)  // TIME ON
-        {
+        {            
             vTaskResume(task_handler_regulate_water);
 
             if(eTaskGetState(task_handler_regulate_water) == eSuspended) // TASK AUTO SUSPEND THEIR SELF WHEN FINISH
             {
+                printf("SE AUTOSUSPENDIO LA TAREA\n");
                 timer_regulate_water= 0;                
             }
         }

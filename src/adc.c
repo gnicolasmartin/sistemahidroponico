@@ -100,7 +100,7 @@ void medir_ec(void)
 
     //Convert adc_reading to voltage in mV
     float voltage_ec = ((float)esp_adc_cal_raw_to_voltage(adc_reading, adc_chars_ec))/1000;
-    float EC_VALUE;
+
     if(voltage_ec < 2)
     {
         EC_VALUE = -25396.38 + 49819.3*voltage_ec - 31647.61*pow(voltage_ec,2) + 6685.308*pow(voltage_ec,3);

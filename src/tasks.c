@@ -27,117 +27,6 @@ char caracter='0';
 extern uint8_t wifi_connected;
 extern uint8_t init_ok;
 
-// Maquina de estados del sistema hidroponico
-void state_machine(void *pvParameter)
-{
-    // uint32_t timer_pump= 0;
-    // // uint32_t timer_sensado_on = 0;
-    // // uint8_t motor_sonda_status = 0;
-    // while (RUNNING) 
-    // {
-    //     printf("El valor del timer es: %d\n", timer_pump);
-    //     /** CONTROL TASK: IRRIGATION **/
-    //     if(timer_pump <= PUMP_TIME_OFF)    // APAGADO
-    //     {
-    //         gpio_set_level(GPIO_BOMBA_PRINCIPAL, OFF);
-    //         timer_pump++;
-    //     }
-    //     else if(timer_pump <= PUMP_TIME_OFF + PUMP_TIME_ON) // ENCENDIDO
-    //     {
-    //         gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
-    //         timer_pump++;
-    //     }
-    //     else
-    //     {
-    //         timer_pump= 0;
-    //     }
-
-    //     /** CONTROL TASK: PH **/
-    //     if(timer_ph <= PH_TIME_OFF)    // TIME OFF
-    //     {
-    //         timer_ph++;        
-    //     }
-    //     else  // TIME ON
-    //     {
-    //         PH_STATE= RUNNING;
-            
-    //         if(PH_STATE == RUNNING)
-    //         {   
-    //             timer_ph++;
-    //         }
-    //         else    // FINISHED
-    //         {
-    //             vTaskSuspend();
-    //             timer_ph= 0;
-    //         }
-            
-    //     }
-        
-    //     /** CONTROL TASK: EC **/
-    //     if(timer_pump <= PUMP_TIME_OFF)    // APAGADO
-    //     {
-    //         gpio_set_level(GPIO_BOMBA_PRINCIPAL, OFF);
-    //         timer_pump++;
-    //     }
-    //     else if(timer_pump <= PUMP_TIME_OFF + PUMP_TIME_ON) // ENCENDIDO
-    //     {
-    //         gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
-    //         timer_pump++;
-    //     }
-    //     else
-    //     {
-    //         timer_pump= 0;
-    //     }
-
-    //     /** CONTROL TASK: HUMIDITY **/
-    //     if(timer_pump <= PUMP_TIME_OFF)    // APAGADO
-    //     {
-    //         gpio_set_level(GPIO_BOMBA_PRINCIPAL, OFF);
-    //         timer_pump++;
-    //     }
-    //     else if(timer_pump <= PUMP_TIME_OFF + PUMP_TIME_ON) // ENCENDIDO
-    //     {
-    //         gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
-    //         timer_pump++;
-    //     }
-    //     else
-    //     {
-    //         timer_pump= 0;
-    //     }
-
-    //     /** CONTROL TASK: TEMPERATURE **/
-    //     if(timer_temperature <= PUMP_TIME_OFF)    // APAGADO
-    //     {
-    //         gpio_set_level(GPIO_BOMBA_PRINCIPAL, OFF);
-    //         timer_pump++;
-    //     }
-    //     else if(timer_pump <= PUMP_TIME_OFF + PUMP_TIME_ON) // ENCENDIDO
-    //     {
-    //         gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
-    //         timer_pump++;
-    //     }
-    //     else
-    //     {
-    //         timer_pump= 0;
-    //     }
-
-
-        // printf("Funcionando en modo CONEXION\n");
-        // //vTaskResume(task_handler_regulate_water);        
-
-        // if(motor_sonda_status == 0)
-        //     timer_sensado_on++;
-        
-        // if(timer_sensado_on == 30)
-        // {
-        //     timer_sensado_on = 0;
-        //     // vTaskResume(task_handler_motor); // DESCOMENTAR PARA QUE FUNCIONE EL NEMA17
-        // }
-
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
-    // }
-}
-
 //Tarea que lee las entradas implementando antirrebote por Software
 void leer_botones(void *pvParameter)
 {
@@ -233,10 +122,16 @@ void toggle_led(void *pvParameter)
 
 void regular_agua(void *pvParameter)
 {
+    // Bajamos la sonda
     motor_sonda(DEGREE_90_DOWN);
+    printf("BAJAMOS SONDA\n");
+    // Alimentamos los sensores
     gpio_set_level(GPIO_ALIMENTACION_AUX, ON);
+    printf("ALIMENTAMOS SONDA\n");
+    // Tiempo de establecimiento
+    sleep(10); //SONDA_STABILIZATION_TIME
+    printf("ESTABILIZAMOS SONDA\n");
 
-    sleep(SONDA_STABILIZATION_TIME);
     static int ESTADO= MEASURE;
 
     while (1) 
@@ -244,16 +139,16 @@ void regular_agua(void *pvParameter)
         switch(ESTADO)
         {
             case MEASURE:
-
+                printf("MEASURE: PH\n");
                 medir_ph();
+                printf("MEASURE: EC\n");
                 medir_ec();
 
                 ESTADO= ANALYZE;
-
             break;
 
             case ANALYZE:
-                
+                printf("ANALYZE\n");
                 if(analizar_ph() == DESREGULATED)
                 {
                     ESTADO= REGULATE_PH;
@@ -270,43 +165,62 @@ void regular_agua(void *pvParameter)
             break;
 
             case REGULATE_PH:
-                
-                regular_ph();
+                printf("REGULATE_PH\n");
+                // Activa la bomba de acido acidulante
+                motor_dosificador(GPIO_DOSIF_ACIDULANTE);
                 ESTADO= MIX_WATER;
 
             break;
 
             case REGULATE_EC:
-
-                regular_ec();
-                ESTADO= MIX_WATER;
+                printf("REGULATE_EC SOLUCION A\n");
+                // Activa la bomba de solucion A y B
+                motor_dosificador(GPIO_DOSIF_ACIDULANTE); //GPIO_DOSIF_SOLUCION_A
+                printf("REGULATE_EC SOLUCION B\n");
+                motor_dosificador(GPIO_DOSIF_ACIDULANTE); //GPIO_DOSIF_SOLUCION_B
+                // ESTADO= MIX_WATER;
+                ESTADO= REGULATED;
 
             break;
 
             case MIX_WATER:
+                printf("MIX_WATER\n");
+                // Enciende bomba de riego
+                gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);                
+                sleep(WATER_STABILIZATION_TIME/5);
+                // Enciende bomba de riego
+                gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
+                sleep(WATER_STABILIZATION_TIME/5);
+                // Enciende bomba de riego
+                gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
+                // sleep(WATER_STABILIZATION_TIME/5);
+                // Enciende bomba de riego
+                gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
+                // sleep(WATER_STABILIZATION_TIME/5);
+                // Enciende bomba de riego
+                gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
+                // sleep(WATER_STABILIZATION_TIME/5);
 
-                gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
-                sleep(WATER_STABILIZATION_TIME/5);
-                gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
-                sleep(WATER_STABILIZATION_TIME/5);
-                gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
-                sleep(WATER_STABILIZATION_TIME/5);
-                gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
-                sleep(WATER_STABILIZATION_TIME/5);
-                gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
-                sleep(WATER_STABILIZATION_TIME/5);
-
+                // Apaga bomba de riego
                 gpio_set_level(GPIO_BOMBA_PRINCIPAL, OFF);
 
-                ESTADO= MEASURE;
+                //ESTADO= MEASURE;
+                ESTADO= REGULATE_PH;
 
             break;
 
             case REGULATED:
-
+                printf("REGULATED\n");
+                // Levanta la sonda
                 motor_sonda(DEGREE_90_UP);
+                printf("LEVANTAMOS SONDA\n");
+                // Apaga alimentacion de las sondas
                 gpio_set_level(GPIO_ALIMENTACION_AUX, OFF);
-                vTaskSuspend(NULL); // Tarea "regular agua" se autosuspende
+                printf("DESALIMENTAMOS SONDA\n");
+
+                // Tarea "regular agua" se autosuspende
+                printf("ESTAMOS AUTOSUSPENDIENDO LA TAREA\n");
+                vTaskSuspend(NULL); 
 
             break;
         }
@@ -344,7 +258,6 @@ void navegar_menu(void *pvParameter)
             {
                 // escanea las redes que hay disponibles
                 wifi_scan();
-                // printf("Las redes son %s\n", WIFI_SSIDS[0]);
 
                 //Posiciona el cursor en el primer elemento del vector de seteo e ingresa a la configuración de SSID
                 opt_menu=0;
@@ -373,7 +286,16 @@ void navegar_menu(void *pvParameter)
                 vTaskResume(task_handler_lcd);
             }
             //Si se encuentra en la configuración de SSID o PWD mueve el cursor
-            else if(pagina_menu==4 || pagina_menu==5)
+            else if(pagina_menu==4)
+            {
+                cursor++;
+                if(cursor>WIFI_SSIDS_SCANNED)
+                {
+                    cursor=0;
+                }                
+                vTaskResume(task_handler_lcd);
+            }
+            else if(pagina_menu==5)
             {
                 cursor++;
                 caracter='0';
@@ -414,19 +336,9 @@ void navegar_menu(void *pvParameter)
                 opt_menu=0;
                 pagina_menu=2;                
                 
-                //Busca el final del SSID seteado y almacena el valor en char * que se usará para la conexión
-                for(i=0;i<16;i++)
-                {
-                    if(SSID[i]==' ')
-                    {
-                        SSID[i]='\0';
-                    }
-                }
-                //strcpy(SSID_seteado,SSID);
-                sprintf(WIFI_SSID, "%s", SSID);
-                printf("Se seteó el SSID: %s\n", SSID);   
+                sprintf(WIFI_SSID, "%s", WIFI_SSIDS[cursor]);
+                printf("Se seteó el SSID: %s\n", WIFI_SSIDS[cursor]);   
                 save_wifi_config(); 
-                wifi_init();
                 vTaskResume(task_handler_lcd);
             }
             //Navega desde la configuración de PWD hacia la configuración WiFi
@@ -564,12 +476,11 @@ void control_lcd(void *pvParameter)
         }
         if(pagina_menu==4)
         {            
-            lcd_send_command(0x01);
-            SSID[cursor]=caracter;            
-            lcd_send_string("Introducir SSID:", LCD_ROW_1);
-	        lcd_send_string(SSID, LCD_ROW_2);
-            printf("Introducir SSID:\n");
-            printf("%s\n", SSID);
+            lcd_send_command(0x01);         
+            lcd_send_string("Seleccione WiFi:", LCD_ROW_1);
+	        lcd_send_string(WIFI_SSIDS[cursor], LCD_ROW_2);
+            printf("Seleccione WiFi:\n");
+            printf("%s\n", WIFI_SSIDS[cursor]);
             vTaskSuspend(task_handler_lcd);            
         }
         if(pagina_menu==5)

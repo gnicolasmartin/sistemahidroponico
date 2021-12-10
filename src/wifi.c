@@ -17,9 +17,11 @@ uint8_t wifi_connected = 0;
 char WIFI_SSID[MAX_LENGTH_SSID] = {0};
 char WIFI_PSWD[MAX_LENGTH_PSWD] = {0};
 char WIFI_SSIDS[DEFAULT_SCAN_LIST_SIZE][MAX_LENGTH_SSID] = {0};
+int  WIFI_SSIDS_SCANNED= 0;
 
 void wifi_init(void)
 {
+  
   printf("wifi initialization\n");
 
   if (load_wifi_config() != -1) // Carga red y contraseña wifi en caso de que ya las hayan ingresado
@@ -33,6 +35,7 @@ void wifi_init(void)
       ESP_ERROR_CHECK(nvs_flash_erase());
       s32RetVal = nvs_flash_init();
     }
+
     ESP_ERROR_CHECK(s32RetVal);
     stCtx.stWifiEventGroup = xEventGroupCreate();
     ESP_ERROR_CHECK(esp_netif_init());
@@ -44,18 +47,18 @@ void wifi_init(void)
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL));
 
     wifi_config_t wifi_config =
-        {
-            .sta =
+    {
+      .sta =
+          {
+            .ssid = SSID_HARDCODEADO,//*WIFI_SSID,
+            .password = PASSWORD_HARDCODEADO,//*WIFI_PSWD,
+            .threshold.authmode = WIFI_AUTH_WPA2_PSK,
+            .pmf_cfg =
                 {
-                    .ssid = SSID_HARDCODEADO,//*WIFI_SSID,
-                    .password = PASSWORD_HARDCODEADO,//*WIFI_PSWD,
-                    .threshold.authmode = WIFI_AUTH_WPA2_PSK,
-                    .pmf_cfg =
-                        {
-                            .capable = true,
-                            .required = false},
-                },
-        };
+                    .capable = true,
+                    .required = false},
+          },
+    };
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
@@ -179,7 +182,7 @@ int load_wifi_config(void)
 void wifi_scan(void)
 {
     ESP_ERROR_CHECK(esp_netif_init());
-    // ESP_ERROR_CHECK(esp_event_loop_create_default());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
     esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
     assert(sta_netif);
 
@@ -197,11 +200,11 @@ void wifi_scan(void)
     ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&number, ap_info));
     ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(&ap_count));
 
-    printf("Total APs scanned = %u\n", ap_count);
+    // printf("Total APs scanned = %u\n", ap_count);
+    WIFI_SSIDS_SCANNED= ap_count;
     for (int i = 0; (i < DEFAULT_SCAN_LIST_SIZE) && (i < ap_count); i++) 
     {
         printf("SSID \t\t%s\n", ap_info[i].ssid);
         sprintf(WIFI_SSIDS[i],"%s", ap_info[i].ssid);
-        printf("Las redes son %s\n", WIFI_SSIDS[i]);
     }
 }

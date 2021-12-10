@@ -29,8 +29,8 @@
 #define APP_WIFI_MAXIMUM_RETRY  0xFFFFFFFF
 #define APP_WIFI_CONNECTED_BIT  BIT0
 #define APP_WIFI_FAIL_BIT       BIT1
-#define MAX_LENGTH_SSID         16
-#define MAX_LENGTH_PSWD         16
+#define MAX_LENGTH_SSID         20
+#define MAX_LENGTH_PSWD         20
 #define DEFAULT_SCAN_LIST_SIZE  10
 // WiFi Credentials
 #define SSID_HARDCODEADO "Telecentro-1188_EXT"

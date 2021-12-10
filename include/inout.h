@@ -11,6 +11,7 @@
 
 // INCLUDES
 #include "driver/gpio.h"
+#include "times.h"
 #include <unistd.h>
 
 // DEFINES
@@ -28,29 +29,32 @@
 #define GPIO_COOL_2             12
 // BOMBAS
 #define GPIO_BOMBA_PRINCIPAL    19
-#define GPIO_DOSIF_1            16
-#define GPIO_DOSIF_2            17
-#define GPIO_DOSIF_3            5
+#define GPIO_DOSIF_SOLUCION_A   16
+#define GPIO_DOSIF_SOLUCION_B   17
+#define GPIO_DOSIF_ACIDULANTE   5   // DRIVER AL LADO DEL NEMA17
 // CALEFACTOR            
 #define GPIO_CALEFACTOR         13
 // ALIMENTACION SONDAS            
 #define GPIO_ALIMENTACION_AUX   23
 // MOTOR SONDAS            
-#define DIR_BRAZO_SONDAS        15
+#define DIR_BRAZO_SONDAS        15  // DRIVER DE LA IZQUIERDA
 #define GPIO_BRAZO_SONDAS       18
-#define DEGREE_90_NEMA17       100
+#define DEGREE_90_NEMA17        100
 #define DEGREE_90_UP            0
 #define DEGREE_90_DOWN          1
+#define PERIOD_uSEG_DOSIF       10425
+#define PERIOD_SEG_DOSIF        0.010425
 // DHT11            
 #define GPIO_SENSOR_TEMP        4
 
+#define ON                      1
+#define OFF                     0
 
 // PROTOTYPES
 void init_antirrebote(void);
 void gpio_init(void);
 void motor_sonda(int dir);
-void regular_ph(void);
-void regular_ec(void);
+void motor_dosificador(int dosificador);
 
 // STRUCTS
 typedef struct antirrebote_t{

@@ -53,14 +53,14 @@ void gpio_init(void)
     gpio_pad_select_gpio(GPIO_CALEFACTOR);
     gpio_set_direction(GPIO_CALEFACTOR,GPIO_MODE_OUTPUT);
 
-    gpio_pad_select_gpio(GPIO_DOSIF_1);
-    gpio_set_direction(GPIO_DOSIF_1,GPIO_MODE_OUTPUT);
+    gpio_pad_select_gpio(GPIO_DOSIF_SOLUCION_A);
+    gpio_set_direction(GPIO_DOSIF_SOLUCION_A,GPIO_MODE_OUTPUT);
 
-    gpio_pad_select_gpio(GPIO_DOSIF_2);
-    gpio_set_direction(GPIO_DOSIF_2,GPIO_MODE_OUTPUT);
+    gpio_pad_select_gpio(GPIO_DOSIF_SOLUCION_B);
+    gpio_set_direction(GPIO_DOSIF_SOLUCION_B,GPIO_MODE_OUTPUT);
 
-    gpio_pad_select_gpio(GPIO_DOSIF_3);
-    gpio_set_direction(GPIO_DOSIF_3,GPIO_MODE_OUTPUT);
+    gpio_pad_select_gpio(GPIO_DOSIF_ACIDULANTE);
+    gpio_set_direction(GPIO_DOSIF_ACIDULANTE,GPIO_MODE_OUTPUT);
 
     gpio_pad_select_gpio(GPIO_BRAZO_SONDAS);                 
     gpio_set_direction(GPIO_BRAZO_SONDAS,GPIO_MODE_OUTPUT);  
@@ -94,19 +94,18 @@ void motor_sonda(int dir)
     uint8_t i = 0;  
     // 2 i -> 1 paso -> 1.8 grados
     // 100 i -> 50 pasos -> 90 grados
-    
     gpio_set_level(DIR_BRAZO_SONDAS, dir);
 
     while(i < DEGREE_90_NEMA17)
     {
         if( i % 2 == 0 )
         {
-            gpio_set_level(GPIO_BRAZO_SONDAS, 0);
+            gpio_set_level(GPIO_BRAZO_SONDAS, OFF);
             // printf("CAMBIO DE ESTADO 0\n");
         }
         else
         {
-            gpio_set_level(GPIO_BRAZO_SONDAS, 1);
+            gpio_set_level(GPIO_BRAZO_SONDAS, ON);
             // printf("CAMBIO DE ESTADO 1\n");
         }
         
@@ -116,12 +115,28 @@ void motor_sonda(int dir)
     }
 }
 
-void regular_ph(void)
+// Control de los dosificadores
+void motor_dosificador(int dosificador)
 {
-    // Activar el GPIO de la bomba de acido acidulante
-}
-
-void regular_ec(void)
-{
-    // Activar el GPIO de la bomba de solucion A y B
+    int i = 0;  
+    // 2 i -> 1 paso -> 1.8 grados
+    // 100 i -> 50 pasos -> 90 grados
+    while(i < TIME_uSEG_FOR_1ML)
+    {
+        if( i % 2 == 0 )
+        {
+            gpio_set_level(dosificador, OFF);
+            // printf("CAMBIO DE ESTADO 0\n");
+        }
+        else
+        {
+            gpio_set_level(dosificador, ON);
+            // printf("CAMBIO DE ESTADO 1\n");
+        }
+        
+        usleep(PERIOD_uSEG_DOSIF); // dormimos 10,425ms (velocidad de giro)
+    
+        i+= PERIOD_uSEG_DOSIF;
+        printf("El valor de i es: %d\n", i);
+    }
 }
