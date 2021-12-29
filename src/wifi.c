@@ -13,7 +13,7 @@
 #include "wifi.h"
 
 static wifi_ctx_t stCtx;
-uint8_t wifi_connected = 0;
+bool wifi_connected = false;
 char WIFI_SSID[MAX_LENGTH_SSID] = {0};
 char WIFI_PSWD[MAX_LENGTH_PSWD] = {0};
 char WIFI_SSIDS[DEFAULT_SCAN_LIST_SIZE][MAX_LENGTH_SSID] = {0};
@@ -202,7 +202,7 @@ void wifi_scan(void)
 
     // printf("Total APs scanned = %u\n", ap_count);
     WIFI_SSIDS_SCANNED= ap_count;
-    for (int i = 0; (i < DEFAULT_SCAN_LIST_SIZE) && (i < ap_count); i++) 
+    for (int i = 0; i < ap_count; i++) 
     {
         printf("SSID \t\t%s\n", ap_info[i].ssid);
         sprintf(WIFI_SSIDS[i],"%s", ap_info[i].ssid);

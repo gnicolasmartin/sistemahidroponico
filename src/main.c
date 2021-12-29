@@ -29,7 +29,7 @@ void app_main()
     adc_init();
     lcd_init();
     fs_init(&conf); 
-    // wifi_init();    // primero inicializar el FS para poder levantar el archivo de configuración del wifi
+    wifi_init();    // primero inicializar el FS para poder levantar el archivo de configuración del wifi
     // wifi_wait();
 
     /************** Variables **************/

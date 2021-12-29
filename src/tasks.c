@@ -444,7 +444,7 @@ void control_lcd(void *pvParameter)
                 vTaskSuspend(task_handler_lcd);
             } 
         }
-        if(pagina_menu==2)
+        if(pagina_menu==2) // Configurar wifi
         {
             lcd_send_command(0x01);
             if(opt_menu==0)
@@ -464,9 +464,8 @@ void control_lcd(void *pvParameter)
                 vTaskSuspend(task_handler_lcd);
             } 
         }
-        if(pagina_menu==3)
+        if(pagina_menu==3)  // Ver Status
         {
-            load_wifi_config(); //Prueba borrar
             printf("Dias de cosecha: \n");
             printf("Días restantes: \n");
             lcd_send_command(0x01);    
