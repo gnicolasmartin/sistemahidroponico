@@ -40,8 +40,8 @@
 #define DIR_BRAZO_SONDAS        15  // DRIVER DE LA IZQUIERDA
 #define GPIO_BRAZO_SONDAS       18
 #define DEGREE_90_NEMA17        100
-#define DEGREE_90_UP            0
-#define DEGREE_90_DOWN          1
+#define DEGREE_90_UP            1
+#define DEGREE_90_DOWN          0
 #define PERIOD_uSEG_DOSIF       10425
 #define PERIOD_SEG_DOSIF        0.010425
 // DHT11            

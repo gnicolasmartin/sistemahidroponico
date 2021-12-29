@@ -21,6 +21,9 @@ esp_vfs_spiffs_conf_t conf =
 
 uint8_t init_ok = 0;
 
+bool IRRIGATION_ON= false;
+bool MIX_ON= false;
+
 void app_main()
 {   
     /************ Initialization ************/
@@ -80,15 +83,22 @@ void app_main()
         /** CONTROL TASK: IRRIGATION **/
         if(timer_pump < PUMP_TIME_OFF)    // APAGADO
         {
-            // gpio_set_level(GPIO_BOMBA_PRINCIPAL, OFF);
+            IRRIGATION_ON= false;
 
+            if(!MIX_ON)
+            {
+                gpio_set_level(GPIO_BOMBA_PRINCIPAL, OFF);
+            }
+            
             // ↓ BORRAR LO QUE VENGA APARTIR DE AHORA ↓
             if (timer_pump == 1)
                 printf("Apagamos riego\n"); 
         }
         else if(timer_pump < PUMP_TIME_OFF + PUMP_TIME_ON) // ENCENDIDO
         {
-            // gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
+            IRRIGATION_ON= true;
+            
+            gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
             
             // ↓ BORRAR LO QUE VENGA APARTIR DE AHORA ↓
             if (timer_pump == PUMP_TIME_OFF)

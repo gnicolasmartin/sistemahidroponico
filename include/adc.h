@@ -20,12 +20,16 @@
 #define NO_OF_SAMPLES            64 
 #define SONDA_STABILIZATION_TIME 60    // in seconds
 #define WATER_STABILIZATION_TIME 300   // in seconds (5 min)
-// Machine state "regular_agua" task
-#define MEASURE                 1
-#define ANALYZE                 2
-#define REGULATE_PH             3
-#define REGULATE_EC             4
-#define MIX_WATER               5
+// State Machine"regular_agua" task
+enum{
+    INIT,
+    MEASURE,
+    ANALYZE,
+    REGULATE_PH,
+    REGULATE_EC,
+    MIX_WATER,
+    END
+};
 // Status of measurement
 #define REGULATED               0        
 #define DESREGULATED            1

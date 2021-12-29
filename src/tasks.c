@@ -122,22 +122,26 @@ void toggle_led(void *pvParameter)
 
 void regular_agua(void *pvParameter)
 {
-    // Bajamos la sonda
-    motor_sonda(DEGREE_90_DOWN);
-    printf("BAJAMOS SONDA\n");
-    // Alimentamos los sensores
-    gpio_set_level(GPIO_ALIMENTACION_AUX, ON);
-    printf("ALIMENTAMOS SONDA\n");
-    // Tiempo de establecimiento
-    sleep(10); //SONDA_STABILIZATION_TIME
-    printf("ESTABILIZAMOS SONDA\n");
-
-    static int ESTADO= MEASURE;
+    static int ESTADO= INIT;
 
     while (1) 
     {
         switch(ESTADO)
         {
+            case INIT:
+                // Bajamos la sonda
+                motor_sonda(DEGREE_90_DOWN);
+                printf("BAJAMOS SONDA\n");
+                // Alimentamos los sensores
+                gpio_set_level(GPIO_ALIMENTACION_AUX, ON);
+                printf("ALIMENTAMOS SONDA\n");
+                // Tiempo de establecimiento
+                sleep(10); //SONDA_STABILIZATION_TIME
+                printf("ESTABILIZAMOS SONDA\n");
+
+                ESTADO= MEASURE;
+            break;
+
             case MEASURE:
                 printf("MEASURE: PH\n");
                 medir_ph();
@@ -159,7 +163,7 @@ void regular_agua(void *pvParameter)
                 }
                 else
                 {
-                    ESTADO= REGULATED;
+                    ESTADO= END;
                 }
 
             break;
@@ -178,39 +182,31 @@ void regular_agua(void *pvParameter)
                 motor_dosificador(GPIO_DOSIF_ACIDULANTE); //GPIO_DOSIF_SOLUCION_A
                 printf("REGULATE_EC SOLUCION B\n");
                 motor_dosificador(GPIO_DOSIF_ACIDULANTE); //GPIO_DOSIF_SOLUCION_B
-                // ESTADO= MIX_WATER;
-                ESTADO= REGULATED;
+                ESTADO= MIX_WATER;
 
             break;
 
             case MIX_WATER:
                 printf("MIX_WATER\n");
+                MIX_ON= true;
+                
                 // Enciende bomba de riego
                 gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);                
-                sleep(WATER_STABILIZATION_TIME/5);
-                // Enciende bomba de riego
-                gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
-                sleep(WATER_STABILIZATION_TIME/5);
-                // Enciende bomba de riego
-                gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
-                // sleep(WATER_STABILIZATION_TIME/5);
-                // Enciende bomba de riego
-                gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
-                // sleep(WATER_STABILIZATION_TIME/5);
-                // Enciende bomba de riego
-                gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
-                // sleep(WATER_STABILIZATION_TIME/5);
+                sleep(WATER_STABILIZATION_TIME);
+                
+                if(!IRRIGATION_ON)
+                {
+                    // Apaga bomba de riego
+                    gpio_set_level(GPIO_BOMBA_PRINCIPAL, OFF);
+                }
 
-                // Apaga bomba de riego
-                gpio_set_level(GPIO_BOMBA_PRINCIPAL, OFF);
-
-                //ESTADO= MEASURE;
-                ESTADO= REGULATE_PH;
+                MIX_ON= false;
+                ESTADO= MEASURE;
 
             break;
 
-            case REGULATED:
-                printf("REGULATED\n");
+            case END:
+                printf("END\n");
                 // Levanta la sonda
                 motor_sonda(DEGREE_90_UP);
                 printf("LEVANTAMOS SONDA\n");
@@ -221,6 +217,8 @@ void regular_agua(void *pvParameter)
                 // Tarea "regular agua" se autosuspende
                 printf("ESTAMOS AUTOSUSPENDIENDO LA TAREA\n");
                 vTaskSuspend(NULL); 
+
+                ESTADO= INIT;
 
             break;
         }

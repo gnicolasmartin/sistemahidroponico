@@ -58,6 +58,8 @@ extern char WIFI_SSID[MAX_LENGTH_SSID];
 extern char WIFI_PSWD[MAX_LENGTH_PSWD];
 extern char WIFI_SSIDS[3][MAX_LENGTH_SSID];
 extern int  WIFI_SSIDS_SCANNED;
+extern bool MIX_ON;
+extern bool IRRIGATION_ON;
 
 
 
