@@ -210,12 +210,12 @@ uint8_t dht11_read(void)
 // Control del NEMA17 (Motor para movimiento de sondas)
 void motor_sonda(int dir)
 {
-    uint8_t i = 0;  
+    int i = 0;  
     // 2 i -> 1 paso -> 1.8 grados
     // 100 i -> 50 pasos -> 90 grados
     gpio_set_level(DIR_BRAZO_SONDAS, dir);
 
-    while(i < DEGREE_90_NEMA17)
+    while(i < 2.66*DEGREE_90_NEMA17)
     {
         if( i % 2 == 0 )
         {

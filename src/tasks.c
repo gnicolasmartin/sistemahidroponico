@@ -13,7 +13,7 @@
 #include "tasks.h"
 
 uint8_t machine_state = STATE_INIT;
-TaskHandle_t task_handler_motor, task_handler_firestore, task_handler_regulate_water, task_handler_input, task_handler_menu, task_handler_lcd;
+TaskHandle_t task_handler_motor, task_handler_firestore, task_handler_regulate_water, task_handler_input, task_handler_menu, task_handler_lcd, task_handler_dosificador;
 uint8_t temperature=0, humidity=0;
 
 //Variables para el manejo de menúes
@@ -131,7 +131,7 @@ void regular_agua(void *pvParameter)
         {
             case INIT:
                 // Bajamos la sonda
-                motor_sonda(DEGREE_90_DOWN);
+                motor_sonda(DEGREE_180_DOWN);
                 printf("BAJAMOS SONDA\n");
                 // Alimentamos los sensores
                 gpio_set_level(GPIO_ALIMENTACION_AUX, ON);
@@ -172,7 +172,7 @@ void regular_agua(void *pvParameter)
             case REGULATE_PH:
                 printf("REGULATE_PH\n");
                 // Activa la bomba de acido acidulante
-                motor_dosificador(GPIO_DOSIF_ACIDULANTE);
+                // motor_dosificador(GPIO_DOSIF_ACIDULANTE);
                 ESTADO= MIX_WATER;
 
             break;
@@ -180,9 +180,9 @@ void regular_agua(void *pvParameter)
             case REGULATE_EC:
                 printf("REGULATE_EC SOLUCION A\n");
                 // Activa la bomba de solucion A y B
-                motor_dosificador(GPIO_DOSIF_ACIDULANTE); //GPIO_DOSIF_SOLUCION_A
+                // motor_dosificador(GPIO_DOSIF_SOLUCION_A);
                 printf("REGULATE_EC SOLUCION B\n");
-                motor_dosificador(GPIO_DOSIF_ACIDULANTE); //GPIO_DOSIF_SOLUCION_B
+                // motor_dosificador(GPIO_DOSIF_SOLUCION_B);
                 ESTADO= MIX_WATER;
 
             break;
@@ -209,7 +209,7 @@ void regular_agua(void *pvParameter)
             case END:
                 printf("END\n");
                 // Levanta la sonda
-                motor_sonda(DEGREE_90_UP);
+                motor_sonda(DEGREE_180_UP);
                 printf("LEVANTAMOS SONDA\n");
                 // Apaga alimentacion de las sondas
                 gpio_set_level(GPIO_ALIMENTACION_AUX, OFF);
@@ -579,6 +579,13 @@ void firestore_task(void *pvParameter)
 
         vTaskDelay(FIRESTORE_PERIOD_MS / portTICK_PERIOD_MS);
     }
+}
+
+// borrar luego
+void dosificador(void *pvParameter)
+{
+    motor_dosificador(GPIO_DOSIF_ACIDULANTE);
+    vTaskDelay(1 / portTICK_PERIOD_MS);
 }
 
 void measure_temp_humid(void *pvParameter)

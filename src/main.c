@@ -52,8 +52,8 @@ void app_main()
     //xTaskCreate(&control_lcd, "control_lcd", 4096, NULL, 2, &task_handler_lcd);
     // Start suspended
     xTaskCreate(&regular_agua, "regular_agua", 4096, NULL, 2, &task_handler_regulate_water);
-    vTaskSuspend(task_handler_regulate_water);
     xTaskCreate(&measure_temp_humid, "measure_temp_humid", 4096, NULL, 1, NULL);
+    vTaskSuspend(task_handler_regulate_water);
     // xTaskCreate(&firestore_task,"firestore", 10240, NULL, 4, &task_handler_firestore);
     // vTaskSuspend(task_handler_firestore);
 
@@ -73,7 +73,7 @@ void app_main()
         timer_regulate_water++;
 
         motor_dosificador(GPIO_DOSIF_ACIDULANTE);
-
+        
         /** CONTROL TASK: DISPLAY **/
         if(timer_display > DISPLAY_INACTIVITY)    // APAGADO
         {

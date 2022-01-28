@@ -11,9 +11,9 @@
 
 // INCLUDES
 #include "driver/gpio.h"
-#include "esp32/rom/ets_sys.h"
 #include "times.h"
 #include <unistd.h>
+#include "esp32/rom/ets_sys.h"
 
 // DEFINES
 #define SENSOR_NIVEL_PRI        36
@@ -41,9 +41,9 @@
 #define DIR_BRAZO_SONDAS        15  // DRIVER DE LA IZQUIERDA
 #define GPIO_BRAZO_SONDAS       18
 #define DEGREE_90_NEMA17        100
-#define DEGREE_90_UP            1
-#define DEGREE_90_DOWN          0
-#define PERIOD_uSEG_DOSIF       10425
+#define DEGREE_180_UP            1
+#define DEGREE_180_DOWN          0
+#define PERIOD_uSEG_DOSIF       10425 // 1 ml cada 6 min
 #define PERIOD_SEG_DOSIF        0.010425
 // DHT11            
 #define GPIO_SENSOR_TEMP        4
