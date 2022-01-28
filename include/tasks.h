@@ -43,6 +43,7 @@ void navegar_menu(void *pvParameter);
 void control_lcd(void *pvParameter);
 void firestore_task(void *pvParameter);
 void state_machine(void *pvParameter);
+void measure_temp_humid(void *pvParameter);
 
 // EXTERNS
 //Estructura de entradas antirrebote

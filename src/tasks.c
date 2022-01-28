@@ -14,6 +14,7 @@
 
 uint8_t machine_state = STATE_INIT;
 TaskHandle_t task_handler_motor, task_handler_firestore, task_handler_regulate_water, task_handler_input, task_handler_menu, task_handler_lcd;
+uint8_t temperature=0, humidity=0;
 
 //Variables para el manejo de menúes
 uint8_t pagina_menu=0;
@@ -577,5 +578,22 @@ void firestore_task(void *pvParameter)
         }
 
         vTaskDelay(FIRESTORE_PERIOD_MS / portTICK_PERIOD_MS);
+    }
+}
+
+void measure_temp_humid(void *pvParameter)
+{
+    uint8_t aux[5], i;
+    while (1) {
+        dht11_init();
+        for(i=0;i<5;i++)
+        {
+            aux[i]=dht11_read();
+        }
+        temperature = aux[2];
+        humidity = aux[0];
+
+        printf("TEMP.: %d°, HUMID.: %d \n", temperature, humidity);
+        vTaskDelay(10000 / portTICK_PERIOD_MS);     
     }
 }

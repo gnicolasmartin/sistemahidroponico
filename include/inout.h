@@ -11,6 +11,7 @@
 
 // INCLUDES
 #include "driver/gpio.h"
+#include "esp32/rom/ets_sys.h"
 #include "times.h"
 #include <unistd.h>
 
@@ -53,8 +54,12 @@
 // PROTOTYPES
 void init_antirrebote(void);
 void gpio_init(void);
+void dht11_init(void);
+uint8_t dht11_check_response(void);
 void motor_sonda(int dir);
 void motor_dosificador(int dosificador);
+uint8_t dht11_read(void);
+int get_dht11_data(int datos);
 
 // STRUCTS
 typedef struct antirrebote_t{

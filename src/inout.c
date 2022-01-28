@@ -88,6 +88,125 @@ void init_antirrebote(void)
     }
 }
 
+void dht11_init(void)
+{
+    gpio_pad_select_gpio(GPIO_SENSOR_TEMP);                 
+    gpio_set_direction(GPIO_SENSOR_TEMP,GPIO_MODE_OUTPUT);
+
+    gpio_set_level(GPIO_SENSOR_TEMP, 1);
+    usleep(4000);
+
+    gpio_set_level(GPIO_SENSOR_TEMP, 0);
+    usleep(18000);
+
+    gpio_set_level(GPIO_SENSOR_TEMP, 1);
+    usleep(30);
+
+    gpio_pad_select_gpio(GPIO_SENSOR_TEMP);                 
+    gpio_set_direction(GPIO_SENSOR_TEMP,GPIO_MODE_INPUT);
+
+    if(dht11_check_response())
+        printf("DHT11 INIT OK\n");
+    else
+        printf("DHT11 INIT FAILED\n");
+/*
+    gpio_pad_select_gpio(GPIO_SENSOR_TEMP);      
+    gpio_set_direction(GPIO_SENSOR_TEMP, GPIO_MODE_OUTPUT);
+    //gpio_set_level(GPIO_SENSOR_TEMP,1);
+    //ets_delay_us(4000);
+
+    gpio_set_level(GPIO_SENSOR_TEMP,0);
+    //vTaskDelay(36 / portTICK_RATE_MS);
+    ets_delay_us(22000);
+    gpio_set_level(GPIO_SENSOR_TEMP,1);
+    ets_delay_us(43);
+    gpio_pad_select_gpio(GPIO_SENSOR_TEMP);      
+    gpio_set_direction(GPIO_SENSOR_TEMP, GPIO_MODE_INPUT);*/
+}
+
+
+uint8_t dht11_check_response(void)
+{
+    uint8_t i, Flag_response = 0;
+    usleep(40);
+
+    if(!gpio_get_level(GPIO_SENSOR_TEMP))
+    {
+        usleep(80);
+        if(gpio_get_level(GPIO_SENSOR_TEMP))
+        {
+            Flag_response = 1;
+        }
+        else
+            return 0;
+    }
+
+
+    for(i=0;i<200;i++)
+    {
+        if(!gpio_get_level(GPIO_SENSOR_TEMP))
+        {
+            Flag_response = 1;
+            break;
+        }
+        else
+        {
+            Flag_response = 0;
+        }
+        usleep(1);
+    }
+
+    return Flag_response;
+}
+
+uint8_t dht11_read(void)
+{
+    uint8_t i,j, error, reading=0;
+    for(j=0;j<8;j++)
+    {
+        error=1;
+        for(i=0;i<120;i++)
+        {
+            usleep(1);
+            if(gpio_get_level(GPIO_SENSOR_TEMP))
+            {
+                error=0;
+                break;
+            }
+        }
+        if(error==1)
+        {
+            printf("ERROR EN LECTURA\n");
+            return 0;
+        }
+
+        usleep(40);
+        if(!gpio_get_level(GPIO_SENSOR_TEMP))
+        {
+            reading &= ~(1<<(7-j));
+        }
+        else
+            reading |= (1<<(7-j));
+        
+        error=1;
+        for(i=0;i<120;i++)
+        {
+            usleep(1);
+            if(!gpio_get_level(GPIO_SENSOR_TEMP))
+            {
+                error=0;
+                break;
+            }
+        }
+        if(error==1)
+        {
+            printf("LECTURA NO OK\n");
+            return 0;
+        }
+    }
+    return reading;
+}
+
 // Control del NEMA17 (Motor para movimiento de sondas)
 void motor_sonda(int dir)
 {
@@ -137,6 +256,5 @@ void motor_dosificador(int dosificador)
         usleep(PERIOD_uSEG_DOSIF); // dormimos 10,425ms (velocidad de giro)
     
         i+= PERIOD_uSEG_DOSIF;
-        printf("El valor de i es: %d\n", i);
     }
 }
