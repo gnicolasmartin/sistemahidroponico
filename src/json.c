@@ -159,13 +159,13 @@ int replace_value(char *file_name, char *key, char *value)
             //Leo todo lo que viene después y veo que tamaño tiene
             fgets(buffer,9999,archivo);            
 
-            tamanio_lectura = strlen(buffer);
+            tamanio_lectura = strlen(buffer)-2;
             
             //Con delta me fijo cual es la diferencia entre palabras y si es negativa o positiva
             delta = tamanio_lectura-(strlen(value)-1);
 
             //Si es menor lo que escribo, el tamaño de lo que tengo que copiar del resto del archivo es menor
-            if(delta<0)
+            if(delta<=0)
             {
                 tamanio_copia=cant_caracteres-ftell(archivo);          
             }
@@ -179,10 +179,14 @@ int replace_value(char *file_name, char *key, char *value)
             fread(aux,1,tamanio_copia,archivo);
 
             //Vuelvo el puntero hacia el comienzo de donde tengo que escribir
-            fseek(archivo, -tamanio_lectura-tamanio_copia,SEEK_CUR);
+            fseek(archivo, -tamanio_lectura-tamanio_copia-1, SEEK_CUR);
+            if(tamanio_lectura>0)
+            {
+                fseek(archivo, -1, SEEK_CUR);
+            }
 
             //Coloco comillas
-            fputc('\"', archivo);   // VER BIEN HAY VECES QUE TENGO QUE PONERLA MANUAL Y HAY VECES QUE NO...
+            //fputc('\"', archivo);   // VER BIEN HAY VECES QUE TENGO QUE PONERLA MANUAL Y HAY VECES QUE NO...
             
             //Escribo la palabra
             fprintf(archivo,"%s",value);
@@ -192,8 +196,10 @@ int replace_value(char *file_name, char *key, char *value)
             fputc('\n', archivo);
 
             //Escribo lo que resta del archivo
-            printf("Lo que resta del archivo es:\n%s\n", aux);
-            fprintf(archivo,"%s",aux);   
+            //printf("Lo que resta del archivo es:\n%s\n", aux);
+            fwrite(aux,1,tamanio_copia,archivo);
+            break;
+            //fprintf(archivo,"%s",aux);   
         }
     }
 

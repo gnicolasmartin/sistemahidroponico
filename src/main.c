@@ -20,6 +20,8 @@ esp_vfs_spiffs_conf_t conf =
 };
 
 uint8_t init_ok = 0;
+bool CROP_RUNNING = false;
+char tipo_planta[50];
 
 bool IRRIGATION_ON= false;
 bool MIX_ON= false;
@@ -38,11 +40,12 @@ void app_main()
 
     /************** Variables **************/
     // Timers declaration
-    int timer_pump, timer_ph, timer_ec, timer_humidity, timer_temperature, timer_display, timer_regulate_water;
+    int timer_pump, timer_ph, timer_ec, timer_humidity, timer_temperature, timer_display, timer_regulate_water, timer_fs_state_check;
+
 
     // Timers initialization
     // Quizas no conviene inicializalos en CERO para no tener que esperar 24hs a que corra... ¿Y si empiezan en su valor maximo?¿Correrian todas las tareas juntas?
-    timer_pump= timer_ph= timer_ec= timer_humidity= timer_temperature= timer_display= timer_regulate_water= 0;
+    timer_pump= timer_ph= timer_ec= timer_humidity= timer_temperature= timer_display= timer_regulate_water= timer_fs_state_check= 0;
 
 
     /*********** Task Declaration **********/
@@ -52,7 +55,7 @@ void app_main()
     //xTaskCreate(&control_lcd, "control_lcd", 4096, NULL, 2, &task_handler_lcd);
     // Start suspended
     xTaskCreate(&regular_agua, "regular_agua", 4096, NULL, 2, &task_handler_regulate_water);
-    xTaskCreate(&measure_temp_humid, "measure_temp_humid", 4096, NULL, 1, NULL);
+    //xTaskCreate(&measure_temp_humid, "measure_temp_humid", 4096, NULL, 1, NULL);
     vTaskSuspend(task_handler_regulate_water);
     // xTaskCreate(&firestore_task,"firestore", 10240, NULL, 4, &task_handler_firestore);
     // vTaskSuspend(task_handler_firestore);
@@ -60,8 +63,29 @@ void app_main()
     // EN DUDA SI QUEDAN O NO
     //xTaskCreate(&toggle_led, "toggle_led", 1024, NULL, 1, NULL);
     
-    /************** Main loop **************/
-    while(RUNNING)
+    /************** Main loop - IDLE **************/  
+    while(!CROP_RUNNING)
+    {
+        timer_fs_state_check++;
+
+        //Cuando se cumple el tiempo seteado en la constante, llama a la función que realiza el chequeo del estado en firestore
+        if(timer_fs_state_check > STATE_CHECK_DELAY)
+        {
+            timer_fs_state_check = 0;
+            if(fs_check_state(SYSTEM_ID, tipo_planta)>0)
+            {
+                printf("Cultivando %s...\n",tipo_planta);
+                fs_check_limits(tipo_planta);
+                fs_stats_actualization(SYSTEM_ID);
+                CROP_RUNNING = true;
+            }
+        }
+
+        sleep(1);
+    }
+
+    /************** Main loop - RUNNING **************/    
+    while(CROP_RUNNING)
     {
         // Increments timers value
         timer_pump++;
@@ -71,6 +95,7 @@ void app_main()
         timer_temperature++;
         timer_display++;
         timer_regulate_water++;
+
 
         motor_dosificador(GPIO_DOSIF_ACIDULANTE);
         
@@ -115,7 +140,7 @@ void app_main()
 
         /** CONTROL TASK: WATER MEASURE **/
         if(timer_regulate_water > REGULATE_WATER_TIME_OFF)  // TIME ON
-        {            
+        {                  
             vTaskResume(task_handler_regulate_water);
 
             if(eTaskGetState(task_handler_regulate_water) == eSuspended) // TASK AUTO SUSPEND THEIR SELF WHEN FINISH
