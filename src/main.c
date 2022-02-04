@@ -29,7 +29,7 @@ void app_main()
     /************ Initialization ************/
     nvs_flash_init();
     gpio_init();
-    dht11_init();
+    // dht11_init();
     adc_init();
     lcd_init();
     fs_init(&conf); 
@@ -38,11 +38,11 @@ void app_main()
 
     /************** Variables **************/
     // Timers declaration
-    int timer_pump, timer_ph, timer_ec, timer_humidity, timer_temperature, timer_display, timer_regulate_water;
+    int timer_pump, timer_ph, timer_ec, timer_humidity, timer_temperature, timer_display, timer_regulate_water, timer_light;
 
     // Timers initialization
     // Quizas no conviene inicializalos en CERO para no tener que esperar 24hs a que corra... ¿Y si empiezan en su valor maximo?¿Correrian todas las tareas juntas?
-    timer_pump= timer_ph= timer_ec= timer_humidity= timer_temperature= timer_display= timer_regulate_water= 0;
+    timer_pump= timer_ph= timer_ec= timer_humidity= timer_temperature= timer_display= timer_regulate_water= timer_light= 0;
 
 
     /*********** Task Declaration **********/
@@ -51,9 +51,9 @@ void app_main()
     //xTaskCreate(&navegar_menu, "navegar_menu", 10240, NULL, 1, &task_handler_menu);
     //xTaskCreate(&control_lcd, "control_lcd", 4096, NULL, 2, &task_handler_lcd);
     // Start suspended
-    xTaskCreate(&regular_agua, "regular_agua", 4096, NULL, 2, &task_handler_regulate_water);
-    xTaskCreate(&measure_temp_humid, "measure_temp_humid", 4096, NULL, 1, NULL);
-    vTaskSuspend(task_handler_regulate_water);
+    // xTaskCreate(&regular_agua, "regular_agua", 4096, NULL, 2, &task_handler_regulate_water);
+    // vTaskSuspend(task_handler_regulate_water);
+    // xTaskCreate(&measure_temp_humid, "measure_temp_humid", 4096, NULL, 1, NULL);
     // xTaskCreate(&firestore_task,"firestore", 10240, NULL, 4, &task_handler_firestore);
     // vTaskSuspend(task_handler_firestore);
 
@@ -62,9 +62,10 @@ void app_main()
     
     /************** Main loop **************/
     while(RUNNING)
-    {
+    {        
         // Increments timers value
         timer_pump++;
+        timer_light++;
         timer_ph++;
         timer_ec++;
         timer_humidity++;
@@ -72,7 +73,10 @@ void app_main()
         timer_display++;
         timer_regulate_water++;
 
-        motor_dosificador(GPIO_DOSIF_ACIDULANTE);
+        motor_dosificador(GPIO_DOSIF_ACIDULANTE); 
+
+        // gpio_set_level(GPIO_ALIMENTACION_AUX, ON);     
+        // medir_ec();
         
         /** CONTROL TASK: DISPLAY **/
         if(timer_display > DISPLAY_INACTIVITY)    // APAGADO
@@ -112,6 +116,31 @@ void app_main()
         {
             timer_pump= 0;
         }
+
+        /** CONTROL TASK: LIGHT **/
+        if(timer_light < LIGHT_TIME_OFF)    // APAGADO
+        {
+            gpio_set_level(GPIO_LIGHT, OFF);
+            gpio_set_level(GPIO_COOLERS_LIGHT, OFF);
+            
+            // ↓ BORRAR LO QUE VENGA APARTIR DE AHORA ↓
+            if (timer_light == 1)
+                printf("Apagamos luz\n"); 
+        }
+        else if(timer_light < LIGHT_TIME_OFF + LIGHT_TIME_ON) // ENCENDIDO
+        {
+            gpio_set_level(GPIO_LIGHT, ON);
+            gpio_set_level(GPIO_COOLERS_LIGHT, ON);
+
+            // ↓ BORRAR LO QUE VENGA APARTIR DE AHORA ↓
+            if (timer_light == LIGHT_TIME_ON)
+                printf("Prendemos luz\n");
+        }
+        else
+        {
+            timer_light= 0;
+        }
+
 
         /** CONTROL TASK: WATER MEASURE **/
         if(timer_regulate_water > REGULATE_WATER_TIME_OFF)  // TIME ON

@@ -26,15 +26,16 @@
 #define GPIO_PULSADOR_ARRIBA    27
 #define GPIO_PULSADOR_ABAJO     33
 // COOLERS
-#define GPIO_COOL_1             14
-#define GPIO_COOL_2             12
+// #define GPIO_COOL_1             14
+// #define GPIO_COOL_2             12
+#define GPIO_COOLERS_LIGHT      14  // Este valor es del GPIO DE EXTRACCION O INTRODUCCION DE AIRE
 // BOMBAS
 #define GPIO_BOMBA_PRINCIPAL    19
 #define GPIO_DOSIF_SOLUCION_A   16
 #define GPIO_DOSIF_SOLUCION_B   17
 #define GPIO_DOSIF_ACIDULANTE   5   // DRIVER AL LADO DEL NEMA17
 // CALEFACTOR            
-#define GPIO_CALEFACTOR         13
+#define GPIO_LIGHT              13
 // ALIMENTACION SONDAS            
 #define GPIO_ALIMENTACION_AUX   23
 // MOTOR SONDAS            

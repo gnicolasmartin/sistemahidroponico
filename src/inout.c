@@ -41,17 +41,21 @@ void gpio_init(void)
     gpio_pad_select_gpio(GPIO_TEST_LED);
     gpio_set_direction(GPIO_TEST_LED,GPIO_MODE_OUTPUT);
 
-    gpio_pad_select_gpio(GPIO_COOL_1);
-    gpio_set_direction(GPIO_COOL_1,GPIO_MODE_OUTPUT);
+    // gpio_pad_select_gpio(GPIO_COOL_1);
+    // gpio_set_direction(GPIO_COOL_1,GPIO_MODE_OUTPUT);
 
-    gpio_pad_select_gpio(GPIO_COOL_2);
-    gpio_set_direction(GPIO_COOL_2,GPIO_MODE_OUTPUT);
+    // gpio_pad_select_gpio(GPIO_COOL_2);
+    // gpio_set_direction(GPIO_COOL_2,GPIO_MODE_OUTPUT);
+
+    // OJO QUE ESTAMOS USANDO EL GPIO DE EXTRACCION O INTRODUCCION DE AIRE
+    gpio_pad_select_gpio(GPIO_COOLERS_LIGHT);
+    gpio_set_direction(GPIO_COOLERS_LIGHT,GPIO_MODE_OUTPUT);
 
     gpio_pad_select_gpio(GPIO_BOMBA_PRINCIPAL);
     gpio_set_direction(GPIO_BOMBA_PRINCIPAL,GPIO_MODE_OUTPUT);
 
-    gpio_pad_select_gpio(GPIO_CALEFACTOR);
-    gpio_set_direction(GPIO_CALEFACTOR,GPIO_MODE_OUTPUT);
+    gpio_pad_select_gpio(GPIO_LIGHT);
+    gpio_set_direction(GPIO_LIGHT,GPIO_MODE_OUTPUT);
 
     gpio_pad_select_gpio(GPIO_DOSIF_SOLUCION_A);
     gpio_set_direction(GPIO_DOSIF_SOLUCION_A,GPIO_MODE_OUTPUT);
@@ -253,8 +257,8 @@ void motor_dosificador(int dosificador)
             // printf("CAMBIO DE ESTADO 1\n");
         }
         
-        usleep(PERIOD_uSEG_DOSIF); // dormimos 10,425ms (velocidad de giro)
+        usleep(PERIOD_uSEG_DOSIF/4); // dormimos 10,425ms (velocidad de giro)
     
-        i+= PERIOD_uSEG_DOSIF;
+        i+= PERIOD_uSEG_DOSIF/4;
     }
 }
