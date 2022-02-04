@@ -14,7 +14,7 @@
 
 uint8_t machine_state = STATE_INIT;
 TaskHandle_t task_handler_motor, task_handler_firestore, task_handler_regulate_water, task_handler_input, task_handler_menu, task_handler_lcd, task_handler_dosificador;
-uint8_t temperature=0, humidity=0;
+uint32_t temperature=25, humidity=70, ph=3, ec=1800;
 
 //Variables para el manejo de menúes
 uint8_t pagina_menu=0;
@@ -154,6 +154,7 @@ void regular_agua(void *pvParameter)
 
             case ANALYZE:
                 printf("ANALYZE\n");
+                
                 if(analizar_ph() == DESREGULATED)
                 {
                     ESTADO= REGULATE_PH;
@@ -214,6 +215,11 @@ void regular_agua(void *pvParameter)
                 // Apaga alimentacion de las sondas
                 gpio_set_level(GPIO_ALIMENTACION_AUX, OFF);
                 printf("DESALIMENTAMOS SONDA\n");
+
+                if(fs_stats_actualization(SYSTEM_ID)>0)
+                {
+                    printf("SE ACTUALIZÓ INFO EN FIREBASE\n");
+                }
 
                 // Tarea "regular agua" se autosuspende
                 printf("ESTAMOS AUTOSUSPENDIENDO LA TAREA\n");

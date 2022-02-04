@@ -17,12 +17,12 @@ const adc_bits_width_t width = ADC_WIDTH_BIT_12;
 const adc_atten_t atten_ec = ADC_ATTEN_DB_11, atten_ph = ADC_ATTEN_DB_11;
 const adc_unit_t unit_ec = ADC_UNIT_1, unit_ph = ADC_UNIT_1;
 
-float PH_VALUE= 0;
-float EC_VALUE= 0;
-float PH_MIN[]= {6.0, 6.0, 6.0, 6.0};
-float PH_MAX[]= {7.0, 7.0, 7.0, 7.0};
-float EC_MIN[]= {600.0, 600.0, 600.0, 600.0};
-float EC_MAX[]= {1200.0, 1200.0, 1200.0, 1200.0};
+extern uint32_t ph;
+extern uint32_t ec;
+uint32_t PH_MIN;
+uint32_t PH_MAX;
+uint32_t EC_MIN;
+uint32_t EC_MAX;
 
 void adc_init(void)
 {
@@ -76,9 +76,9 @@ void medir_ph(void)
 
     //Convert adc_reading to voltage in mV
     float voltage_ph = ((float) esp_adc_cal_raw_to_voltage(adc_reading, adc_chars_ph))/1000;
-    PH_VALUE = -6.718671*voltage_ph + 21.78108;
+    ph = (uint32_t) -6.718671*voltage_ph + 21.78108;
 
-    printf("Raw: %d\tVoltage: %fV\t PH: %f\n", adc_reading, voltage_ph, PH_VALUE);
+    printf("Raw: %d\tVoltage: %fV\t PH: %d\n", adc_reading, voltage_ph, ph);
 }
 
 void medir_ec(void)
@@ -103,19 +103,19 @@ void medir_ec(void)
 
     if(voltage_ec < 2)
     {
-        EC_VALUE = -25396.38 + 49819.3*voltage_ec - 31647.61*pow(voltage_ec,2) + 6685.308*pow(voltage_ec,3);
+        ec = (uint32_t) -25396.38 + 49819.3*voltage_ec - 31647.61*pow(voltage_ec,2) + 6685.308*pow(voltage_ec,3);
     }
     else
     {
-        EC_VALUE = -30282000 + 44892160*voltage_ec - 22189180*pow(voltage_ec,2) + 3656986*pow(voltage_ec,3);   
+        ec = (uint32_t) -30282000 + 44892160*voltage_ec - 22189180*pow(voltage_ec,2) + 3656986*pow(voltage_ec,3);   
     }
     
-    printf("Raw: %d\tVoltage: %fV\t EC: %fppm\n", adc_reading, voltage_ec, EC_VALUE);
+    printf("Raw: %d\tVoltage: %fV\t EC: %dppm\n", adc_reading, voltage_ec, ec);
 }
 
 int analizar_ph(void)
 {
-    if(PH_VALUE > PH_MIN[SELECTED_PLANT] && EC_VALUE < PH_MAX[SELECTED_PLANT])
+    if(ph > PH_MIN && ph < PH_MAX)
     {
         return REGULATED;
     }
@@ -125,7 +125,7 @@ int analizar_ph(void)
 
 int analizar_ec(void)
 {
-    if(EC_VALUE > EC_MIN[SELECTED_PLANT] && EC_VALUE < EC_MAX[SELECTED_PLANT])
+    if(ec > EC_MIN && ec < EC_MAX)
     {
         return REGULATED;
     }

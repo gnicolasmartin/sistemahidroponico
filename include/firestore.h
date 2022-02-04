@@ -11,6 +11,7 @@
 
 // INCLUDES
 #include <stdint.h>
+#include "json.h"
 #include <string.h>
 #include "esp_http_client.h"
 
@@ -123,6 +124,10 @@ typedef struct
 #define ESP_DOCUMENT_ID         "Lechuga"
 #define ESP_DOCUMENT_FIELD      "Temperatura"
 
+#define SYSTEM_ID               "324"
+#define SYSTEM_COLLECTION       "Systems"
+
+
 // PROTOTYPES
 firestore_err_t init_firestore(void);
 esp_err_t firestore_http_event_handler(esp_http_client_event_t *pstEvent);
@@ -131,3 +136,7 @@ firestore_err_t firestore_get_document(char *pcCollectionId, char *pcDocumentId,
 firestore_err_t firestore_add_document(char *pcCollectionId, char *pcDocumentId, char *pcDocument, uint32_t *pu32DocumentLen);
 firestore_err_t firestore_update_document(char *pcCollectionId, char *pcDocumentId, char *pcDocument, uint32_t *pu32DocumentLen);
 firestore_err_t firestore_delete_document(char *pcCollectionId, char *pcDocumentId);
+
+int8_t fs_check_state(char*, char*);
+int8_t fs_stats_actualization(char *);
+int8_t fs_check_limits(char *planta);

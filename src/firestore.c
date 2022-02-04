@@ -14,6 +14,12 @@
 
 static firestore_ctx_t stCtx;
 
+extern uint32_t ec;
+extern uint32_t ph;
+extern uint32_t temperature;
+extern uint32_t humidity;
+extern uint32_t PH_MAX, PH_MIN, EC_MAX, EC_MIN;
+
 firestore_err_t init_firestore(void)
 {
     /* Initialize the firestore_ctx_t struct*/
@@ -358,6 +364,206 @@ esp_err_t firestore_http_event_handler(esp_http_client_event_t *pstEvent)
   }
 
   return s32RetVal;
+}
+
+int8_t fs_check_state(char *id, char *planta)
+{
+    static uint32_t u32DocLength;
+    static char tcDoc[FIRESTORE_DOC_MAX_SIZE];
+
+    if(init_firestore() != FIRESTORE_OK)
+    {
+        return -1;
+    }
+    
+    u32DocLength = snprintf(tcDoc, sizeof(tcDoc), " ");
+
+    // Leemos de firestore un documento
+    firestore_err_t FIRESTORE_STATUS = firestore_get_document(SYSTEM_COLLECTION, id, tcDoc, &u32DocLength);
+
+    if(FIRESTORE_STATUS != FIRESTORE_OK)
+    {
+        printf("ERROR: Couldn't get document\n");
+        return -1;
+    }
+
+    // Creamos un archivo JSON para respaldar el documento leido de firestore
+    FILE* f = fopen("/spiffs/system.json", "w");    
+
+    // Chequeamos si hay error
+    if (f != NULL)                                   
+    {
+        // Guardamos el JSON en un archivo
+        fprintf(f, "%s", tcDoc);
+        fputc('\0', f);
+        fclose(f); 
+    }
+
+    char valor[100];
+    int value = search_value("/spiffs/system.json", "plant", valor);
+
+    if(value == -1)
+    {
+        printf("ERROR: Couldn´t search value in JSON file\n");
+        return -2;
+    }
+
+    if(!strcmp("",valor))
+    {
+        return 0;
+    }
+    else
+    {
+        strcpy(planta, valor);
+        return 1;
+    }
+    
+}
+
+int8_t fs_stats_actualization(char *id)
+{
+    static uint32_t u32DocLength;
+    static char tcDoc[FIRESTORE_DOC_MAX_SIZE]; 
+    char temp_fs[20], hum_fs[20], ec_fs[20], ph_fs[20];
+
+    FILE* f;
+
+    if(init_firestore() != FIRESTORE_OK)
+    {
+        return -1;
+    }
+
+    itoa(temperature, temp_fs, 10);
+    itoa(ph, ph_fs, 10);
+    itoa(ec, ec_fs, 10);
+    itoa(humidity, hum_fs, 10);
+
+    int value = replace_value("/spiffs/system.json", "temperature", temp_fs);
+    if(value == -1)
+    {
+        printf("ERROR: Couldn´t replace value in JSON file\n");
+    }
+
+    value = replace_value("/spiffs/system.json", "acidity", ph_fs);
+    if(value == -1)
+    {
+        printf("ERROR: Couldn´t replace value in JSON file\n");
+    }
+
+    value = replace_value("/spiffs/system.json", "humidity", hum_fs);
+    if(value == -1)
+    {
+        printf("ERROR: Couldn´t replace value in JSON file\n");
+    }
+
+    value = replace_value("/spiffs/system.json", "conductivity", ec_fs);
+    if(value == -1)
+    {
+        printf("ERROR: Couldn´t replace value in JSON file\n");
+    }
+
+    // Abrimos el JSON con el campo actualizado
+    f = fopen("/spiffs/system.json", "r");
+
+    // Pasamos el contenido del JSON a una variable
+    fread(tcDoc, FIRESTORE_DOC_MAX_SIZE, 1, f);
+    u32DocLength = sizeof(tcDoc);
+
+    // Cerramos archivo JSON de respaldo
+    fclose(f);
+
+    // Actualizamos el documento en firestore
+    firestore_err_t FIRESTORE_STATUS= firestore_update_document(SYSTEM_COLLECTION, id, tcDoc, &u32DocLength);
+
+    if(FIRESTORE_STATUS != FIRESTORE_OK)
+    {
+        printf("ERROR: Couldn't update document\n");
+        return -1;
+    }
+    else
+    {
+        return 1;
+    }
+    
+}
+
+int8_t fs_check_limits(char *planta)
+{
+    static uint32_t u32DocLength;
+    static char tcDoc[FIRESTORE_DOC_MAX_SIZE];
+
+    if(init_firestore() != FIRESTORE_OK)
+    {
+        return -1;
+    }
+    
+    u32DocLength = snprintf(tcDoc, sizeof(tcDoc), " ");
+
+    // Leemos de firestore un documento
+    firestore_err_t FIRESTORE_STATUS = firestore_get_document(PLANTS_COLLECTION_ID, planta, tcDoc, &u32DocLength);
+
+    if(FIRESTORE_STATUS != FIRESTORE_OK)
+    {
+        printf("ERROR: Couldn't get document\n");
+        return -1;
+    }
+
+    // Creamos un archivo JSON para respaldar el documento leido de firestore
+    FILE* f = fopen("/spiffs/plant.json", "w");    
+
+    // Chequeamos si hay error
+    if (f != NULL)                                   
+    {
+        // Guardamos el JSON en un archivo
+        fprintf(f, "%s", tcDoc);
+        fputc('\0', f);
+        fclose(f); 
+    }
+
+    char valor[100];
+    int value = search_value("/spiffs/plant.json", "ec_max", valor);
+
+    if(value == -1)
+    {
+        printf("ERROR: Couldn´t search value in JSON file\n");
+        return -2;
+    }
+
+    EC_MAX = atoi(valor);
+
+    value = search_value("/spiffs/plant.json", "ec_min", valor);
+
+    if(value == -1)
+    {
+        printf("ERROR: Couldn´t search value in JSON file\n");
+        return -2;
+    }
+
+    EC_MIN = atoi(valor);
+
+    value = search_value("/spiffs/plant.json", "ph_min", valor);
+
+    if(value == -1)
+    {
+        printf("ERROR: Couldn´t search value in JSON file\n");
+        return -2;
+    }
+
+    PH_MIN = atoi(valor);
+
+    value = search_value("/spiffs/plant.json", "ph_max", valor);
+
+    if(value == -1)
+    {
+        printf("ERROR: Couldn´t search value in JSON file\n");
+        return -2;
+    }
+
+    PH_MAX = atoi(valor);
+
+    printf("Valores límite actualizados:\n *PH_MIN:%d\n *PH_MAX:%d\n *EC_MIN:%d\n *EC_MAX:%d\n",PH_MIN,PH_MAX,EC_MIN,EC_MAX);
+
+    return 1;
 }
 
 //***************************************** EJEMPLOS DE LLAMADO A FUNCIONES *****************************************
