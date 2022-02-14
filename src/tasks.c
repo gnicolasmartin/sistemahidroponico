@@ -68,7 +68,9 @@ void leer_botones(void *pvParameter)
                 {
                     entradas_antirrebote[i].contador=0;
                     entradas_antirrebote[i].estado_anterior=entradas_antirrebote[i].estado_actual;
-                    entradas_antirrebote[i].level=entradas_antirrebote[i].estado_actual;                 
+                    entradas_antirrebote[i].level=entradas_antirrebote[i].estado_actual;
+                    // if(!entradas_antirrebote[i].level)
+                    //     printf("Cambio el estado del pulsador %d a: %d\n",i, entradas_antirrebote[i].level);                 
                 }
             }
             else
@@ -134,8 +136,8 @@ void regular_agua(void *pvParameter)
                 motor_sonda(DEGREE_180_DOWN);
                 printf("BAJAMOS SONDA\n");
                 // Alimentamos los sensores
-                gpio_set_level(GPIO_ALIMENTACION_AUX, ON);
-                printf("ALIMENTAMOS SONDA\n");
+                // gpio_set_level(GPIO_ALIMENTACION_AUX, ON);
+                // printf("ALIMENTAMOS SONDA\n");
                 // Tiempo de establecimiento
                 sleep(10); //SONDA_STABILIZATION_TIME
                 printf("ESTABILIZAMOS SONDA\n");
@@ -213,8 +215,8 @@ void regular_agua(void *pvParameter)
                 motor_sonda(DEGREE_180_UP);
                 printf("LEVANTAMOS SONDA\n");
                 // Apaga alimentacion de las sondas
-                gpio_set_level(GPIO_ALIMENTACION_AUX, OFF);
-                printf("DESALIMENTAMOS SONDA\n");
+                // gpio_set_level(GPIO_ALIMENTACION_AUX, OFF);
+                // printf("DESALIMENTAMOS SONDA\n");
 
                 if(fs_stats_actualization(SYSTEM_ID)>0)
                 {

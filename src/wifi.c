@@ -21,7 +21,6 @@ int  WIFI_SSIDS_SCANNED= 0;
 
 void wifi_init(void)
 {
-  
   printf("wifi initialization\n");
 
   if (load_wifi_config() != -1) // Carga red y contraseña wifi en caso de que ya las hayan ingresado
@@ -144,6 +143,16 @@ int save_wifi_config(void)
 int load_wifi_config(void)
 {
   FILE *config_file = fopen(WIFI_CONFIG_FILE, "r");
+
+  if (config_file == NULL)
+  {
+    strcpy(WIFI_SSID, SSID_HARDCODEADO);
+    strcpy(WIFI_PSWD, PASSWORD_HARDCODEADO);
+
+    save_wifi_config();
+  }
+
+  config_file = fopen(WIFI_CONFIG_FILE, "r");
 
   if (config_file == NULL)
   {

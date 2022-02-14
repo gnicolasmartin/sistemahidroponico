@@ -20,7 +20,7 @@ esp_vfs_spiffs_conf_t conf =
 };
 
 uint8_t init_ok = 0;
-bool CROP_RUNNING = false;
+bool CROP_RUNNING = true; // TEST: Volver a False
 char tipo_planta[50];
 
 bool IRRIGATION_ON= false;
@@ -45,13 +45,14 @@ void app_main()
     // Timers initialization
     // Quizas no conviene inicializalos en CERO para no tener que esperar 24hs a que corra... ¿Y si empiezan en su valor maximo?¿Correrian todas las tareas juntas?
     timer_pump= timer_ph= timer_ec= timer_humidity= timer_temperature= timer_display= timer_regulate_water= timer_light= timer_fs_state_check= 0;
+    // timer_light= LIGHT_TIME_OFF - 10;
 
 
     /*********** Task Declaration **********/
     // Start running
-    //xTaskCreate(&leer_botones, "leer_botones", 1024, NULL, 1, &task_handler_input);
-    //xTaskCreate(&navegar_menu, "navegar_menu", 10240, NULL, 1, &task_handler_menu);
-    //xTaskCreate(&control_lcd, "control_lcd", 4096, NULL, 2, &task_handler_lcd);
+    xTaskCreate(&leer_botones, "leer_botones", 10240, NULL, 1, &task_handler_input);
+    xTaskCreate(&navegar_menu, "navegar_menu", 10240, NULL, 2, &task_handler_menu);
+    xTaskCreate(&control_lcd, "control_lcd", 4096, NULL, 2, &task_handler_lcd);
     // Start suspended
     xTaskCreate(&regular_agua, "regular_agua", 4096, NULL, 2, &task_handler_regulate_water);
     vTaskSuspend(task_handler_regulate_water);
@@ -96,7 +97,10 @@ void app_main()
         timer_display++;
         timer_regulate_water++;
 
-        motor_dosificador(GPIO_DOSIF_ACIDULANTE); 
+        
+        // printf("Por dosificar ACIDULANTE\n"); 
+
+        // motor_dosificador(GPIO_BRAZO_SONDAS); 
 
         // gpio_set_level(GPIO_ALIMENTACION_AUX, ON);     
         // medir_ec();
@@ -156,7 +160,7 @@ void app_main()
             gpio_set_level(GPIO_COOLERS_LIGHT, ON);
 
             // ↓ BORRAR LO QUE VENGA APARTIR DE AHORA ↓
-            if (timer_light == LIGHT_TIME_ON)
+            if (timer_light == LIGHT_TIME_OFF)
                 printf("Prendemos luz\n");
         }
         else

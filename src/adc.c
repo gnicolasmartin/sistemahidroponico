@@ -12,7 +12,7 @@
 #include "adc.h"
 
 esp_adc_cal_characteristics_t *adc_chars_ec, *adc_chars_ph;
-const adc_channel_t channel_ec = ADC_CHANNEL_7, channel_ph = ADC_CHANNEL_6;
+const adc_channel_t channel_ec = ADC_CHANNEL_0, channel_ph = ADC_CHANNEL_3;
 const adc_bits_width_t width = ADC_WIDTH_BIT_12;
 const adc_atten_t atten_ec = ADC_ATTEN_DB_11, atten_ph = ADC_ATTEN_DB_11;
 const adc_unit_t unit_ec = ADC_UNIT_1, unit_ph = ADC_UNIT_1;

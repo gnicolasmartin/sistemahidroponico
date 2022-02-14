@@ -72,8 +72,8 @@ void gpio_init(void)
     gpio_pad_select_gpio(DIR_BRAZO_SONDAS);                 
     gpio_set_direction(DIR_BRAZO_SONDAS,GPIO_MODE_OUTPUT);  
 
-    gpio_pad_select_gpio(GPIO_ALIMENTACION_AUX);                 
-    gpio_set_direction(GPIO_ALIMENTACION_AUX,GPIO_MODE_OUTPUT); 
+    // gpio_pad_select_gpio(GPIO_ALIMENTACION_AUX);                 
+    // gpio_set_direction(GPIO_ALIMENTACION_AUX,GPIO_MODE_OUTPUT); 
 
     //Inicializa las estructuras antirrebote
     init_antirrebote();
@@ -241,24 +241,27 @@ void motor_sonda(int dir)
 // Control de los dosificadores
 void motor_dosificador(int dosificador)
 {
-    int i = 0;  
+    int i = 0; 
+    uint8_t pre_estado=0; 
     // 2 i -> 1 paso -> 1.8 grados
     // 100 i -> 50 pasos -> 90 grados
     while(i < TIME_uSEG_FOR_1ML)
     {
-        if( i % 2 == 0 )
+        if( pre_estado == 1 )
         {
+            pre_estado=0;
             gpio_set_level(dosificador, OFF);
-            // printf("CAMBIO DE ESTADO 0\n");
+            //printf("CAMBIO DE ESTADO 0\n");
         }
         else
         {
+            pre_estado=1;
             gpio_set_level(dosificador, ON);
-            // printf("CAMBIO DE ESTADO 1\n");
+            //printf("CAMBIO DE ESTADO 1\n");
         }
         
-        usleep(PERIOD_uSEG_DOSIF/4); // dormimos 10,425ms (velocidad de giro)
+        usleep(PERIOD_uSEG_DOSIF); // dormimos 2,606ms (velocidad de giro)
     
-        i+= PERIOD_uSEG_DOSIF/4;
+        i+= PERIOD_uSEG_DOSIF;
     }
 }
