@@ -84,7 +84,7 @@ void medir_ph(void)
 void medir_ec(void)
 {
     uint32_t adc_reading = 0;
-    
+    float aux;
     //Multisampling
     for (int i = 0; i < NO_OF_SAMPLES; i++) {
         if (unit_ec == ADC_UNIT_1) {
@@ -98,19 +98,14 @@ void medir_ec(void)
     
     adc_reading /= NO_OF_SAMPLES;
 
-    //Convert adc_reading to voltage in mV
-    float voltage_ec = ((float)esp_adc_cal_raw_to_voltage(adc_reading, adc_chars_ec))/1000;
+    aux = 2044959000 + (520.3848 - 2044959000)/(1 + pow((adc_reading/13859.89),6.790912));
 
-    if(voltage_ec < 2)
-    {
-        ec = (uint32_t) -25396.38 + 49819.3*voltage_ec - 31647.61*pow(voltage_ec,2) + 6685.308*pow(voltage_ec,3);
-    }
-    else
-    {
-        ec = (uint32_t) -30282000 + 44892160*voltage_ec - 22189180*pow(voltage_ec,2) + 3656986*pow(voltage_ec,3);   
-    }
+    //Convert adc_reading to voltage in mV
+    float voltage_ec = ((float)esp_adc_cal_raw_to_voltage(adc_reading, adc_chars_ec));
+
+    ec = (uint32_t) aux;   
     
-    printf("Raw: %d\tVoltage: %fV\t EC: %dppm\n", adc_reading, voltage_ec, ec);
+    printf("Raw: %d\tVoltage: %fmV\t EC: %dppm\n", adc_reading, voltage_ec, ec);
 }
 
 int analizar_ph(void)

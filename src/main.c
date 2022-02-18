@@ -50,9 +50,9 @@ void app_main()
 
     /*********** Task Declaration **********/
     // Start running
-    xTaskCreate(&leer_botones, "leer_botones", 10240, NULL, 1, &task_handler_input);
-    xTaskCreate(&navegar_menu, "navegar_menu", 10240, NULL, 2, &task_handler_menu);
-    xTaskCreate(&control_lcd, "control_lcd", 4096, NULL, 2, &task_handler_lcd);
+    //xTaskCreate(&leer_botones, "leer_botones", 10240, NULL, 1, &task_handler_input);
+    //xTaskCreate(&navegar_menu, "navegar_menu", 10240, NULL, 2, &task_handler_menu);
+    //xTaskCreate(&control_lcd, "control_lcd", 4096, NULL, 2, &task_handler_lcd);
     // Start suspended
     xTaskCreate(&regular_agua, "regular_agua", 4096, NULL, 2, &task_handler_regulate_water);
     vTaskSuspend(task_handler_regulate_water);
@@ -103,7 +103,7 @@ void app_main()
         // motor_dosificador(GPIO_BRAZO_SONDAS); 
 
         // gpio_set_level(GPIO_ALIMENTACION_AUX, ON);     
-        // medir_ec();
+        medir_ec();
         
         /** CONTROL TASK: DISPLAY **/
         if(timer_display > DISPLAY_INACTIVITY)    // APAGADO
