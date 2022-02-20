@@ -13,6 +13,19 @@
 
 const char* spiffs_test_partition_label = "flash_test";
 
+
+void init_rom()
+{
+    esp_err_t s32RetVal = nvs_flash_init();
+    if ((ESP_ERR_NVS_NO_FREE_PAGES == s32RetVal) || (ESP_ERR_NVS_NEW_VERSION_FOUND == s32RetVal))
+    {
+      ESP_ERROR_CHECK(nvs_flash_erase());
+      s32RetVal = nvs_flash_init();
+    }
+
+    ESP_ERROR_CHECK(s32RetVal);
+}
+
 void fs_init(esp_vfs_spiffs_conf_t* conf)
 {
     printf("Initializing SPIFFS\n");
