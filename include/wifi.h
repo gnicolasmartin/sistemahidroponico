@@ -16,12 +16,12 @@
 // INCLUDES
 #include <esp_wifi.h>
 #include <esp_event.h>
+#include "esp_log.h"
 //_________ ver estos includes
 #include <string.h>
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <freertos/event_groups.h>
-#include <nvs_flash.h>
 //_________
 
 // DEFINES
@@ -53,6 +53,8 @@ void wifi_event_handler(void* pvArg, esp_event_base_t pcEventBase, int32_t s32Ev
 int save_wifi_config(void);
 int load_wifi_config(void);
 void wifi_scan(void);
+void wifi_remove(void);
+void wifi_connect(void);
 void print_cipher_type(int pairwise_cipher, int group_cipher);
 void print_auth_mode(int authmode);
 

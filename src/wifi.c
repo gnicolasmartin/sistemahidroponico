@@ -13,112 +13,188 @@
 #include "wifi.h"
 
 static wifi_ctx_t stCtx;
-bool wifi_connected = false;
-char WIFI_SSID[MAX_LENGTH_SSID] = {0};
-char WIFI_PSWD[MAX_LENGTH_PSWD] = {0};
-char WIFI_SSIDS[DEFAULT_SCAN_LIST_SIZE][MAX_LENGTH_SSID] = {0};
+esp_netif_t *sta;
+bool WIFI_IS_CONNECTED = false;
+bool FORCE_DISCONECTION = false;
+char WIFI_SSID[MAX_LENGTH_SSID] = {};
+char WIFI_PSWD[MAX_LENGTH_PSWD] = {};
+char WIFI_SSIDS[DEFAULT_SCAN_LIST_SIZE][MAX_LENGTH_SSID] = {""};
 int  WIFI_SSIDS_SCANNED= 0;
 
 void wifi_init(void)
 {
-  printf("wifi initialization\n");
+  // INICIALIZACIONES (Alerta no pueden correrse mas de una vez)
+  ESP_ERROR_CHECK(esp_netif_init());
+  ESP_ERROR_CHECK(esp_event_loop_create_default());
+  sta=esp_netif_create_default_wifi_sta();
+  assert(sta);
 
-  if (load_wifi_config() != -1) // Carga red y contraseña wifi en caso de que ya las hayan ingresado
+  ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
+  ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL));
+
+  wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+  ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
+  ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+
+  load_wifi_config();
+  wifi_connect(); // if fails WIFI_IS_CONNECTED will be false
+
+}
+
+void wifi_connect()
+{
+  esp_log_level_set("wifi", ESP_LOG_NONE);
+  esp_log_level_set("wifi_init", ESP_LOG_NONE);
+  esp_log_level_set("system_api", ESP_LOG_NONE);
+  esp_log_level_set("phy_init", ESP_LOG_NONE);
+
+  if(WIFI_IS_CONNECTED)
   {
-    esp_err_t s32RetVal;
-
-    memset(&stCtx, 0x00, sizeof(stCtx));
-    s32RetVal = nvs_flash_init();
-    if ((ESP_ERR_NVS_NO_FREE_PAGES == s32RetVal) || (ESP_ERR_NVS_NEW_VERSION_FOUND == s32RetVal))
-    {
-      ESP_ERROR_CHECK(nvs_flash_erase());
-      s32RetVal = nvs_flash_init();
-    }
-
-    ESP_ERROR_CHECK(s32RetVal);
-    stCtx.stWifiEventGroup = xEventGroupCreate();
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-    esp_netif_create_default_wifi_sta();
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-    ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL));
-
-    wifi_config_t wifi_config =
-    {
-      .sta =
-          {
-            .ssid = SSID_HARDCODEADO,//*WIFI_SSID,
-            .password = PASSWORD_HARDCODEADO,//*WIFI_PSWD,
-            .threshold.authmode = WIFI_AUTH_WPA2_PSK,
-            .pmf_cfg =
-                {
-                    .capable = true,
-                    .required = false},
-          },
-    };
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
-    ESP_ERROR_CHECK(esp_wifi_start());
-    wifi_connected = true;
-    printf("Successful wifi initialization\n");
+    // Detenemos conexión anterior
+    FORCE_DISCONECTION= true;
+    ESP_ERROR_CHECK(esp_wifi_disconnect());
+    FORCE_DISCONECTION= false;
   }
-  else
+
+  // Declaramos la estructura wifi_config
+  wifi_config_t wifi_config;
+  // Inicializamos la estructura wifi_config
+  memset(&wifi_config, 0, sizeof(wifi_config));
+  // Rellenamos la estructura wifi_config
+  strcpy((char*) wifi_config.sta.ssid, WIFI_SSID);
+  strcpy((char*) wifi_config.sta.password, WIFI_PSWD);
+  wifi_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
+  wifi_config.sta.pmf_cfg.capable= false;
+  wifi_config.sta.pmf_cfg.required= false;
+
+  // Iniciamos nueva conexión
+  ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
+  ESP_ERROR_CHECK(esp_wifi_start());
+  ESP_ERROR_CHECK(esp_wifi_connect());
+  
+  wifi_wait();  // if WiFi is connected, the FLAG will be activated
+
+  // In case we don´t want to try reconnection if the WiFi is not connected
+  // if(!WIFI_IS_CONNECTED)
+  // {
+  //   FORCE_DISCONECTION= true;
+  //   esp_wifi_disconnect();
+  //   FORCE_DISCONECTION= false;
+  // }
+}
+
+/* Initialize Wi-Fi as sta and set scan method */
+void wifi_scan(void)
+{
+  esp_log_level_set("wifi", ESP_LOG_NONE);
+  esp_log_level_set("wifi_init", ESP_LOG_NONE);
+  esp_log_level_set("system_api", ESP_LOG_NONE);
+  esp_log_level_set("phy_init", ESP_LOG_NONE);
+
+  // Detenemos conexión anterior o intento de reconexión
+  FORCE_DISCONECTION= true;
+  ESP_ERROR_CHECK(esp_wifi_disconnect());
+  FORCE_DISCONECTION= false;
+
+  uint16_t number = DEFAULT_SCAN_LIST_SIZE;
+  wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
+  uint16_t ap_count = 0;
+  memset(ap_info, 0, sizeof(ap_info));
+
+  ESP_ERROR_CHECK(esp_wifi_start());
+  esp_wifi_scan_start(NULL, true);
+  ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&number, ap_info));
+  ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(&ap_count));
+
+  // printf("Total APs scanned = %u\n", ap_count);
+  WIFI_SSIDS_SCANNED= ap_count;
+  for (int i = 0; i < ap_count; i++)
   {
-    printf("Failed to initialize wifi\n");
+      printf("Detectamos SSID \t\t%s\n", ap_info[i].ssid);
+      sprintf(WIFI_SSIDS[i],"%s", ap_info[i].ssid);
   }
-  //ESP_LOGI(APP_WIFI_TAG, "Finished wifi initialization");
+
+  ESP_ERROR_CHECK(esp_wifi_scan_stop());
 }
 
 void wifi_wait(void)
 {
   printf("Waiting for wifi connection\n");
-  //ESP_LOGI(APP_WIFI_TAG, "Waiting for wifi connection");
-  stCtx.u32EventBits = xEventGroupWaitBits(stCtx.stWifiEventGroup, APP_WIFI_CONNECTED_BIT | APP_WIFI_FAIL_BIT, pdFALSE, pdFALSE, portMAX_DELAY);
+  memset(&stCtx, 0x00, sizeof(stCtx));
+  stCtx.stWifiEventGroup = xEventGroupCreate();
+  stCtx.u32EventBits = xEventGroupWaitBits(stCtx.stWifiEventGroup, APP_WIFI_CONNECTED_BIT | APP_WIFI_FAIL_BIT, pdFALSE, pdFALSE, portMAX_DELAY); //);//1000/portTICK_PERIOD_MS);
+
   if (stCtx.u32EventBits & APP_WIFI_CONNECTED_BIT)
   {
-    //ESP_LOGI(APP_WIFI_TAG, "Connected to AP, SSID: %s password: %s", WIFI_SSID, WIFI_PASSWORD);
+    printf("Connected to SSID: %s password: %s\n", WIFI_SSID, WIFI_PSWD);
+    WIFI_IS_CONNECTED = true;
   }
   else if (stCtx.u32EventBits & APP_WIFI_FAIL_BIT)
   {
-    //ESP_LOGI(APP_WIFI_TAG, "Failed to connect to SSID:%s, password:%s", WIFI_SSID, WIFI_PASSWORD);
+    printf("Failed to connect to SSID: %s, password: %s\n", WIFI_SSID, WIFI_PSWD);
+    WIFI_IS_CONNECTED = false;
   }
   else
   {
-    printf("Wifi Timeout\n");
+    printf("Wifi Timeout %d\n", stCtx.u32EventBits);
+    WIFI_IS_CONNECTED = false;
   }
-  ESP_ERROR_CHECK(esp_event_handler_unregister(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler));
-  ESP_ERROR_CHECK(esp_event_handler_unregister(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler));
-  vEventGroupDelete(stCtx.stWifiEventGroup);
 }
 
 void wifi_event_handler(void *pvArg, esp_event_base_t pcEventBase, int32_t s32EventId, void *pvEventData)
 {
   if ((WIFI_EVENT == pcEventBase) && (WIFI_EVENT_STA_START == s32EventId))
   {
+    printf("[HANDLER] WiFi Firt Trying to connect\n");
     esp_wifi_connect();
   }
   else if ((WIFI_EVENT == pcEventBase) && (WIFI_EVENT_STA_DISCONNECTED == s32EventId))
   {
-    if (stCtx.u08RetryCount < APP_WIFI_MAXIMUM_RETRY)
+    if(!FORCE_DISCONECTION)
     {
-      esp_wifi_connect();
-      stCtx.u08RetryCount++;
-      //ESP_LOGI(APP_WIFI_TAG, "Retrying to connect to the AP");
+      if (stCtx.u08RetryCount < APP_WIFI_MAXIMUM_RETRY)
+      {
+        esp_wifi_connect();
+        stCtx.u08RetryCount++;
+        printf("[HANDLER] WiFi Retrying to connect\n");
+        xEventGroupSetBits(stCtx.stWifiEventGroup, APP_WIFI_FAIL_BIT);
+      }
+      else
+      {
+        printf("[HANDLER] WiFi Disconnected Maximum retries\n");
+        xEventGroupSetBits(stCtx.stWifiEventGroup, APP_WIFI_FAIL_BIT);
+        WIFI_IS_CONNECTED= false;
+      }
     }
     else
     {
-      xEventGroupSetBits(stCtx.stWifiEventGroup, APP_WIFI_FAIL_BIT);
+        printf("[HANDLER] WiFi Forced Disconnected\n");
+        // xEventGroupSetBits(stCtx.stWifiEventGroup, APP_WIFI_FAIL_BIT);
+        WIFI_IS_CONNECTED= false;
     }
-    //ESP_LOGI(APP_WIFI_TAG,"Connection to the AP fail");
   }
   else if ((IP_EVENT == pcEventBase) && (IP_EVENT_STA_GOT_IP == s32EventId))
   {
+    printf("[HANDLER] WiFi Connected\n");
     stCtx.pstIpEvent = (ip_event_got_ip_t *)pvEventData;
-    //ESP_LOGI(APP_WIFI_TAG, "Got IP:" IPSTR, IP2STR(&stCtx.pstIpEvent->ip_info.ip));
+    //printf("Got IP:" IPSTR, IP2STR(&stCtx.pstIpEvent->ip_info.ip));
     stCtx.u08RetryCount = 0;
+    WIFI_IS_CONNECTED= true;
     xEventGroupSetBits(stCtx.stWifiEventGroup, APP_WIFI_CONNECTED_BIT);
+  }
+  else if((IP_EVENT == pcEventBase) && (WIFI_EVENT_STA_CONNECTED == s32EventId))
+  {
+    printf("[HANDLER] WiFi Connected\n");
+    stCtx.pstIpEvent = (ip_event_got_ip_t *)pvEventData;
+    stCtx.u08RetryCount = 0;
+    WIFI_IS_CONNECTED= true;
+    xEventGroupSetBits(stCtx.stWifiEventGroup, APP_WIFI_CONNECTED_BIT);
+  }
+  else
+  {
+    WIFI_IS_CONNECTED= false;
+    printf("[HANDLER] Signal Handler not Captured\n");
   }
 }
 
@@ -137,6 +213,9 @@ int save_wifi_config(void)
   fputc('\0', config_file);
 
   fclose(config_file);
+
+  printf("Config file updated\n");
+
   return 0;
 }
 
@@ -146,17 +225,10 @@ int load_wifi_config(void)
 
   if (config_file == NULL)
   {
-    strcpy(WIFI_SSID, SSID_HARDCODEADO);
-    strcpy(WIFI_PSWD, PASSWORD_HARDCODEADO);
-
-    save_wifi_config();
-  }
-
-  config_file = fopen(WIFI_CONFIG_FILE, "r");
-
-  if (config_file == NULL)
-  {
-    perror("fopen failed");
+    perror("fopen failed");    
+    strcpy(WIFI_SSID, ""); // WIFI_SSID[0]= "\0";
+    strcpy(WIFI_PSWD, ""); // WIFI_PSWD[0]= "\0";
+    WIFI_IS_CONNECTED = false;
     return -1;
   }
 
@@ -179,41 +251,10 @@ int load_wifi_config(void)
     }
   }
 
-  printf("Leimos: WIFI_SSID: %s\n", WIFI_SSID);
-  printf("Leimos: WIFI_PSWD: %s\n", WIFI_PSWD);
+  printf("Leimos: WIFI_SSID: %s y WIFI_PSWD: %s\n", WIFI_SSID, WIFI_PSWD);
+
   free(KEY);
   fclose(config_file);
 
   return 0;
-}
-
-/* Initialize Wi-Fi as sta and set scan method */
-void wifi_scan(void)
-{
-    ESP_ERROR_CHECK(esp_netif_init());
-    ESP_ERROR_CHECK(esp_event_loop_create_default());
-    esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
-    assert(sta_netif);
-
-    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-
-    uint16_t number = DEFAULT_SCAN_LIST_SIZE;
-    wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
-    uint16_t ap_count = 0;
-    memset(ap_info, 0, sizeof(ap_info));
-
-    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
-    ESP_ERROR_CHECK(esp_wifi_start());
-    esp_wifi_scan_start(NULL, true);
-    ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&number, ap_info));
-    ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(&ap_count));
-
-    // printf("Total APs scanned = %u\n", ap_count);
-    WIFI_SSIDS_SCANNED= ap_count;
-    for (int i = 0; i < ap_count; i++) 
-    {
-        printf("SSID \t\t%s\n", ap_info[i].ssid);
-        sprintf(WIFI_SSIDS[i],"%s", ap_info[i].ssid);
-    }
 }
