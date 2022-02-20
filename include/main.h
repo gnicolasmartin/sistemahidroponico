@@ -26,6 +26,8 @@ extern TaskHandle_t task_handler_input;
 extern TaskHandle_t task_handler_menu;
 extern TaskHandle_t task_handler_lcd;
 extern TaskHandle_t task_handler_motor;
+extern bool WIFI_IS_CONNECTED;
+
 
 
 

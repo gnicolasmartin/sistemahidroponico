@@ -17,15 +17,15 @@ TaskHandle_t task_handler_motor, task_handler_firestore, task_handler_regulate_w
 uint32_t temperature=25, humidity=70, ph=3, ec=1800;
 
 //Variables para el manejo de menúes
-uint8_t pagina_menu=0;
-uint8_t opt_menu=0;
+uint8_t pagina_menu= 0;
+uint8_t opt_menu= 0;
+char test_msg[17]= "                 ";
 
 //Vectores para configuraciones de WiFi y variables
 char SSID[16]="                ";
 char PWD[16]="                ";
 uint8_t cursor=0;
 char caracter='0';
-extern uint8_t wifi_connected;
 extern uint8_t init_ok;
 
 //Tarea que lee las entradas implementando antirrebote por Software
@@ -238,17 +238,34 @@ void regular_agua(void *pvParameter)
 void navegar_menu(void *pvParameter)
 {
     int i;
+    
     while (1) {
+
         //Se detecta el nivel alto de la entrada antirrebote asociada al pulsador "DERECHA"
         if(!entradas_antirrebote[1].level)
         {
+            printf("### Presionó: DERECHA\n");
+            //Si se encuentra en la pantalla principal, accede al primer menú           
+            if(pagina_menu==0)
+            {
+                opt_menu=0;
+                pagina_menu=1;
+                vTaskResume(task_handler_lcd);
+            }
             //Si el programa está posicionado en el primer menú de opciones
             //-->Si está seleccionada la opción "Configuración WiFi"
-            if(pagina_menu==1 && opt_menu==0)
+            else if(pagina_menu==1 && opt_menu==0)
             {  
                 //-->Ingresa a la Configuración de WiFi
-                opt_menu=0;
                 pagina_menu=2;
+                
+                memset(WIFI_SSIDS, 0, sizeof(WIFI_SSIDS));
+                // escanea las redes que hay disponibles
+                wifi_scan();
+
+                //Posiciona el cursor en el primer elemento del vector de seteo e ingresa a la configuración de SSID
+                cursor=0;
+                
                 vTaskResume(task_handler_lcd);
             }
             //-->Si está seleccionada la opción "Ver Status"
@@ -256,53 +273,33 @@ void navegar_menu(void *pvParameter)
             {
                 //-->Ingresa a ver la cantidad de días de cosecha y la cantidad restante estimada
                 opt_menu=0;
-                pagina_menu=3;
-                vTaskResume(task_handler_lcd);
-            }
-            //Si el programa está posicionado en el menú de WiFi
-            //-->Si está seleccionada la opción "Configuración de SSID"            
-            else if(pagina_menu==2 && opt_menu==0)
-            {
-                // escanea las redes que hay disponibles
-                wifi_scan();
-
-                //Posiciona el cursor en el primer elemento del vector de seteo e ingresa a la configuración de SSID
-                opt_menu=0;
-                cursor=0;
-                caracter=SSID[0];
                 pagina_menu=4;
                 vTaskResume(task_handler_lcd);
-            }       
-            //Si el programa está posicionado en el menú de WiFi
-            //-->Si está seleccionada la opción "Configuración de PWD"             
-            else if(pagina_menu==2 && opt_menu==1)
+            }
+            //-->Si está seleccionada la opción "Smoke Test"
+            else if(pagina_menu==1 && opt_menu==2)
             {
-                //Posiciona el cursor en el primer elemento del vector de seteo e ingresa a la configuración de SSID
-                opt_menu=0;
-                opt_menu=0;
-                cursor=0;
-                caracter=PWD[0];
-                pagina_menu=5;
-                vTaskResume(task_handler_lcd);
-            }   
-            //Si se encuentra en la pantalla principal, accede al primer menú           
-            else if(pagina_menu==0)
-            {
-                opt_menu=0;
+                //-->Comienza el testing
+                opt_menu=2;
                 pagina_menu=1;
+                SMOKE_TEST= true;
                 vTaskResume(task_handler_lcd);
             }
-            //Si se encuentra en la configuración de SSID o PWD mueve el cursor
-            else if(pagina_menu==4)
-            {
-                cursor++;
-                if(cursor>WIFI_SSIDS_SCANNED)
-                {
-                    cursor=0;
-                }                
+            //-->Navega de "Configuración WiFi" -> "Configuración de PWD"
+            else if(pagina_menu==2)
+            {                
+                // Se seteo la red WiFi
+                sprintf(WIFI_SSID, "%s", WIFI_SSIDS[cursor]);
+
+                //Posiciona el cursor en el primer elemento del vector
+                cursor=0;
+                //Ingresa a la configuración de PSWD
+                pagina_menu=3;
+
                 vTaskResume(task_handler_lcd);
-            }
-            else if(pagina_menu==5)
+            }               
+            //Si se encuentra en la configuración de PWD mueve el cursor
+            else if(pagina_menu==3)
             {
                 cursor++;
                 caracter='0';
@@ -311,16 +308,18 @@ void navegar_menu(void *pvParameter)
                     cursor=0;
                 }
                 vTaskResume(task_handler_lcd);
-            }
+            }                        
         }
         //Se detecta el nivel alto de la entrada antirrebote asociada al pulsador "IZQUIERDA"
-        if(!entradas_antirrebote[2].level)
+        else if(!entradas_antirrebote[2].level)
         {
+            printf("### Presionó: IZQUIERDA\n");
             //Navega desde el primer menú hacia la pantalla principal
             if(pagina_menu==1)
             {
                 opt_menu=0;
                 pagina_menu=0;
+                SMOKE_TEST= false;
                 vTaskResume(task_handler_lcd);
             }
             //Navega desde la configuración WiFi hacia el primer menú
@@ -330,29 +329,12 @@ void navegar_menu(void *pvParameter)
                 pagina_menu=1;
                 vTaskResume(task_handler_lcd);
             }
-            //Navega desde "Status" hacia el primer menú
+            //Navega desde la configuración de PWD hacia la configuración WiFi
             if(pagina_menu==3)
             {
                 opt_menu=0;
                 pagina_menu=1;
-                vTaskResume(task_handler_lcd);
-            }
-            //Navega desde la configuración de SSID hacia la configuración WiFi
-            if(pagina_menu==4)
-            {
-                opt_menu=0;
-                pagina_menu=2;                
                 
-                sprintf(WIFI_SSID, "%s", WIFI_SSIDS[cursor]);
-                printf("Se seteó el SSID: %s\n", WIFI_SSIDS[cursor]);   
-                save_wifi_config(); 
-                vTaskResume(task_handler_lcd);
-            }
-            //Navega desde la configuración de PWD hacia la configuración WiFi
-            if(pagina_menu==5)
-            {
-                opt_menu=0;
-                pagina_menu=2;
                 //Busca el final del PWD seteado y almacena el valor en char * que se usará para la conexión
                 for(i=0;i<16;i++)
                 {
@@ -362,47 +344,111 @@ void navegar_menu(void *pvParameter)
                     }
                 }
 
-                sprintf(WIFI_SSID, "%s", PWD);
-                printf("Se seteó el PWD: %s\n", PWD);      
-                save_wifi_config();
-                wifi_init();
+                sprintf(WIFI_PSWD, "%s", PASSWORD_HARDCODEADO);//PWD);
+                wifi_connect();
+
+                vTaskDelay(100 / portTICK_PERIOD_MS);
+
+                if(WIFI_IS_CONNECTED)
+                {
+                    save_wifi_config();
+                    pagina_menu= 5;
+                }
+                else
+                {
+                    pagina_menu= 6;
+                }
+                
+                vTaskResume(task_handler_lcd);
+            }
+            //Navega desde "Status" hacia el primer menú
+            if(pagina_menu==4)
+            {
+                opt_menu=0;
+                pagina_menu=1;
+                vTaskResume(task_handler_lcd);
+            }
+             //Navega desde "Conexión exitosa!" hacia el primer menú
+            if(pagina_menu==5)
+            {
+                opt_menu=0;
+                pagina_menu=1;
+                vTaskResume(task_handler_lcd);
+            }
+             //Navega desde "Conexión fallida!" hacia el primer menú
+            if(pagina_menu==6)
+            {
+                opt_menu=0;
+                pagina_menu=1;
                 vTaskResume(task_handler_lcd);
             }
         }
         //Se detecta el nivel alto de la entrada antirrebote asociada al pulsador "ARRIBA"
-        if(!entradas_antirrebote[3].level)
+        else if(!entradas_antirrebote[3].level)
         {
-            if(pagina_menu==1 || pagina_menu==2)
+            printf("### Presionó: ARRIBA\n");
+            if(pagina_menu==1)
             {
                 //En menúes de dos opciones selecciona la opción superior
-                if(opt_menu==0)
+                if(opt_menu==1)
+                {
+                    opt_menu=0; 
+                    vTaskResume(task_handler_lcd); 
+                }
+                if(opt_menu==2)
                 {
                     opt_menu=1; 
                     vTaskResume(task_handler_lcd); 
                 }
             }
-            if(pagina_menu==4 || pagina_menu==5)
+            //Si se encuentra en la configuración de SSID mueve el cursor
+            else if(pagina_menu==2)
+            {
+                cursor++;
+                if(cursor>=WIFI_SSIDS_SCANNED)
+                {
+                    cursor=0;
+                }                
+                vTaskResume(task_handler_lcd);
+            }
+            else if(pagina_menu==3)
             {
                 //En los menúes de seteo scrollea los caracteres
                 caracter--;
                 if(caracter=='0')
                     caracter='y';
                 vTaskResume(task_handler_lcd);
-            }
+            }            
         }
         //Se detecta el nivel alto de la entrada antirrebote asociada al pulsador "ABAJO"
-        if(!entradas_antirrebote[4].level)
+        else if(!entradas_antirrebote[4].level)
         {
-            if(pagina_menu==1 || pagina_menu==2)
+            printf("### Presionó: ABAJO\n");
+            if(pagina_menu==1)
             {
                 //En menúes de dos opciones selecciona la opción inferior
-                if(opt_menu==1)
+                if(pagina_menu== 1 && opt_menu==1 && !CROP_RUNNING) // HIDDEN Menu for TESTING MODE (only in IDLE mode)
                 {
-                    opt_menu=0;
+                    opt_menu=2;
                     vTaskResume(task_handler_lcd);
-                }    
+                }
+                else if(opt_menu == 0)
+                {
+                    opt_menu=1;
+                    vTaskResume(task_handler_lcd);
+                }
             }
-            if(pagina_menu==4 || pagina_menu==5)
+            //Si se encuentra en la configuración de SSID mueve el cursor
+            else if(pagina_menu==2)
+            {
+                cursor++;
+                if(cursor>=WIFI_SSIDS_SCANNED)
+                {
+                    cursor=0;
+                }                
+                vTaskResume(task_handler_lcd);
+            }
+            if(pagina_menu==3)
             {
                 //En los menúes de seteo scrollea los caracteres
                 caracter++;
@@ -410,8 +456,9 @@ void navegar_menu(void *pvParameter)
                     caracter='0';
                 vTaskResume(task_handler_lcd);
             }
-        }
-        vTaskDelay(500 / portTICK_PERIOD_MS);
+        }    
+
+        vTaskDelay(350 / portTICK_PERIOD_MS);
     }
 }
 
@@ -431,7 +478,7 @@ void control_lcd(void *pvParameter)
                 vTaskSuspend(task_handler_lcd);
             }
         }
-        if(pagina_menu==1)
+        else if(pagina_menu==1)
         {
             lcd_send_command(0x01);
             if(opt_menu==0)
@@ -442,62 +489,131 @@ void control_lcd(void *pvParameter)
 	            lcd_send_string(" Ver Status", LCD_ROW_2);
                 vTaskSuspend(task_handler_lcd);
             } 
-            if(opt_menu==1)
+            else if(opt_menu==1)
             {
                 printf(" Configurar WiFi\n");
                 printf(">Ver Status\n");
                 lcd_send_string(" Configurar WiFi", LCD_ROW_1);
 	            lcd_send_string(">Ver Status", LCD_ROW_2);
                 vTaskSuspend(task_handler_lcd);
-            } 
+            }
+            else if(opt_menu==2) // This MENU is hidden, will be only available if state is IDLE and it is for activating the TEST MODE
+            {
+                sprintf(test_msg, "Smoke Test [%d/%d]", TEST_STATE, COOLERS);                
+                printf("%s\n", test_msg);
+                lcd_send_string(test_msg, LCD_ROW_1);
+	            
+                switch (TEST_STATE)
+                {
+                    case LIGHTS:
+                        printf("Prueba luces\n");
+                        lcd_send_string("Prueba luces", LCD_ROW_2);
+                        break;
+                    
+                    case PUMP:
+                        printf("Prueba riego\n");
+                        lcd_send_string("Prueba riego", LCD_ROW_2);
+                        break;
+
+                    case SONDA_EC:
+                        printf("Prueba sonda EC\n");
+                        lcd_send_string("Prueba sonda EC", LCD_ROW_2);
+                        break;
+
+                    case DOSIF_SOL_A:
+                        printf("Prueba dosif A\n");
+                        lcd_send_string("Prueba dosif A", LCD_ROW_2);
+                        break;
+
+                    case DOSIF_SOL_B:
+                        printf("Prueba dosif B\n");
+                        lcd_send_string("Prueba dosif B", LCD_ROW_2);
+                        break;
+
+                    case SONDA_PH:
+                        printf("Prueba sonda PH\n");
+                        lcd_send_string("Prueba sonda PH", LCD_ROW_2);
+                        break;
+
+                    case DOSIF_PH:
+                        printf("Prueba dosif PH\n");
+                        lcd_send_string("Prueba dosif PH", LCD_ROW_2);
+                        break;
+
+                    case DHT11:
+                        printf("Prueba Temp-Hum\n");
+                        lcd_send_string("Prueba Temp-Hum", LCD_ROW_2);
+                        break;
+                    
+                    case COOLERS:
+                        printf("Prueba Coolers\n");
+                        lcd_send_string("Prueba Coolers", LCD_ROW_2);
+                        break;
+
+                    default:
+                        printf(">Activate\n");
+                        lcd_send_string(">Activate", LCD_ROW_2);
+                        break;
+                }
+
+                vTaskSuspend(task_handler_lcd);
+            }  
         }
-        if(pagina_menu==2) // Configurar wifi
+        else if(pagina_menu==2) // Configurar wifi
         {
             lcd_send_command(0x01);
             if(opt_menu==0)
             {
-                printf(">Configurar SSID\n");
-                printf(" Configurar PWD\n");
-                lcd_send_string(">Configurar SSID", LCD_ROW_1);
-	            lcd_send_string(" Configurar PWD", LCD_ROW_2);
+                printf("Seleccione WiFi:\n");
+                printf("%s\n", WIFI_SSIDS[cursor]);
+                lcd_send_string("Seleccione WiFi:", LCD_ROW_1);
+                lcd_send_string(WIFI_SSIDS[cursor], LCD_ROW_2);
+            
                 vTaskSuspend(task_handler_lcd);
             }
-            if(opt_menu==1)
-            {
-                printf(" Configurar SSID\n");
-                printf(">Configurar PWD\n");
-                lcd_send_string(" Configurar SSID", LCD_ROW_1);
-	            lcd_send_string(">Configurar PWD", LCD_ROW_2);
-                vTaskSuspend(task_handler_lcd);
-            } 
         }
-        if(pagina_menu==3)  // Ver Status
+        else if(pagina_menu==3) // Configurar password
         {
+            lcd_send_command(0x01);
+
+            PWD[cursor]= caracter;
+            printf("Introduzca PSWD\n");
+            printf("%s\n", PWD);
+
+            lcd_send_string("Introduzca PSWD", LCD_ROW_1);
+	        lcd_send_string(PWD, LCD_ROW_2);
+            vTaskSuspend(task_handler_lcd);            
+        }
+        else if(pagina_menu==4)  // Ver Status
+        {
+            lcd_send_command(0x01);    
+
             printf("Dias de cosecha: \n");
             printf("Días restantes: \n");
-            lcd_send_command(0x01);    
+
             lcd_send_string("Dias de cosecha: ", LCD_ROW_1);
 	        lcd_send_string("Días restantes: ", LCD_ROW_2);     
             vTaskSuspend(task_handler_lcd);       
         }
-        if(pagina_menu==4)
-        {            
-            lcd_send_command(0x01);         
-            lcd_send_string("Seleccione WiFi:", LCD_ROW_1);
-	        lcd_send_string(WIFI_SSIDS[cursor], LCD_ROW_2);
-            printf("Seleccione WiFi:\n");
-            printf("%s\n", WIFI_SSIDS[cursor]);
-            vTaskSuspend(task_handler_lcd);            
-        }
-        if(pagina_menu==5)
+        else if(pagina_menu==5) // WiFi Conectado
         {
             lcd_send_command(0x01);
-            PWD[cursor]=caracter;
-            lcd_send_string("Introducir PWD:", LCD_ROW_1);
-	        lcd_send_string(PWD, LCD_ROW_2);
-            printf("Introducir PWD:\n");
-            printf("%s\n", PWD);
-            vTaskSuspend(task_handler_lcd);            
+            printf("Configurando WiFi\n");
+            printf("Conexión exitosa!\n");
+
+            lcd_send_string("Configurando WiFi", LCD_ROW_1);
+            lcd_send_string("Conexión exitosa!", LCD_ROW_2);
+            vTaskSuspend(task_handler_lcd); 
+        }
+        else if(pagina_menu==6) // WiFi No Conectado
+        {
+            lcd_send_command(0x01);
+            printf("Configurando WiFi\n");
+            printf("Conexión fallida!\n");
+            
+            lcd_send_string("Configurando WiFi", LCD_ROW_1);
+            lcd_send_string("Conexión fallida!", LCD_ROW_2);
+            vTaskSuspend(task_handler_lcd);   
         }
     }
 }

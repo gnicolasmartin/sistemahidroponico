@@ -20,7 +20,9 @@ esp_vfs_spiffs_conf_t conf =
 };
 
 uint8_t init_ok = 0;
-bool CROP_RUNNING = true; // TEST: Volver a False
+bool CROP_RUNNING = false; // TEST: Volver a False
+bool SMOKE_TEST = false; 
+int  TEST_STATE = OFF;
 char tipo_planta[50];
 
 bool IRRIGATION_ON= false;
@@ -29,14 +31,14 @@ bool MIX_ON= false;
 void app_main()
 {   
     /************ Initialization ************/
-    nvs_flash_init();
-    gpio_init();
-    // dht11_init();
+    init_rom();
+    fs_init(&conf);
+    wifi_init();    // primero inicializar el FS para poder levantar el archivo de configuración del wifi
+
+    gpio_init();    
     adc_init();
     lcd_init();
-    fs_init(&conf); 
-    wifi_init();    // primero inicializar el FS para poder levantar el archivo de configuración del wifi
-    // wifi_wait();
+    // dht11_init();
 
     /************** Variables **************/
     // Timers declaration
@@ -50,34 +52,105 @@ void app_main()
 
     /*********** Task Declaration **********/
     // Start running
-    //xTaskCreate(&leer_botones, "leer_botones", 10240, NULL, 1, &task_handler_input);
-    //xTaskCreate(&navegar_menu, "navegar_menu", 10240, NULL, 2, &task_handler_menu);
-    //xTaskCreate(&control_lcd, "control_lcd", 4096, NULL, 2, &task_handler_lcd);
+    xTaskCreate(&leer_botones, "leer_botones", 10240, NULL, 1, &task_handler_input);
+    xTaskCreate(&navegar_menu, "navegar_menu", 10240, NULL, 2, &task_handler_menu);
+    
     // Start suspended
-    xTaskCreate(&regular_agua, "regular_agua", 4096, NULL, 2, &task_handler_regulate_water);
-    vTaskSuspend(task_handler_regulate_water);
-    //xTaskCreate(&measure_temp_humid, "measure_temp_humid", 4096, NULL, 1, NULL);
+    xTaskCreate(&control_lcd, "control_lcd", 4096, NULL, 2, &task_handler_lcd);
+    vTaskSuspend(task_handler_lcd);
+    // xTaskCreate(&regular_agua, "regular_agua", 4096, NULL, 2, &task_handler_regulate_water);
+    // vTaskSuspend(task_handler_regulate_water);
+    // xTaskCreate(&measure_temp_humid, "measure_temp_humid", 4096, NULL, 1, NULL);
+    
+
+    // EN DUDA SI QUEDAN O NO
+    // xTaskCreate(&toggle_led, "toggle_led", 1024, NULL, 1, NULL);
     // xTaskCreate(&firestore_task,"firestore", 10240, NULL, 4, &task_handler_firestore);
     // vTaskSuspend(task_handler_firestore);
 
-    // EN DUDA SI QUEDAN O NO
-    //xTaskCreate(&toggle_led, "toggle_led", 1024, NULL, 1, NULL);
     
     /************** Main loop - IDLE **************/  
     while(!CROP_RUNNING)
     {
-        timer_fs_state_check++;
+        timer_fs_state_check++;        
 
-        //Cuando se cumple el tiempo seteado en la constante, llama a la función que realiza el chequeo del estado en firestore
-        if(timer_fs_state_check > STATE_CHECK_DELAY)
+        // Se activa desde el menú de navegación
+        if(SMOKE_TEST)
         {
-            timer_fs_state_check = 0;
-            if(fs_check_state(SYSTEM_ID, tipo_planta)>0)
+            printf("SMOKE TEST ACTIVATED!\n");
+            // -> TESTING LIGHTS
+            TEST_STATE= LIGHTS;
+            vTaskResume(task_handler_lcd);
+            gpio_set_level(GPIO_LIGHT, ON);
+            gpio_set_level(GPIO_COOLERS_LIGHT, ON);
+            sleep(25);
+            gpio_set_level(GPIO_LIGHT, OFF);
+            gpio_set_level(GPIO_COOLERS_LIGHT, OFF);
+
+            // -> TESTING PUMP
+            TEST_STATE= PUMP;
+            vTaskResume(task_handler_lcd);
+            gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
+            sleep(25);
+            gpio_set_level(GPIO_BOMBA_PRINCIPAL, OFF);
+
+            // -> TESTING SONDA_EC
+            TEST_STATE= SONDA_EC;
+            vTaskResume(task_handler_lcd);
+            sleep(25);
+
+            // -> TESTING DOSIF_SOL_A
+            TEST_STATE= DOSIF_SOL_A;
+            vTaskResume(task_handler_lcd);
+            // motor_dosificador(GPIO_DOSIF_SOLUCION_A);
+
+            // -> TESTING DOSIF_SOL_B
+            TEST_STATE= DOSIF_SOL_B;
+            vTaskResume(task_handler_lcd);
+            // motor_dosificador(GPIO_DOSIF_SOLUCION_B);
+            
+            // -> TESTING SONDA_PH
+            TEST_STATE= SONDA_PH;
+            vTaskResume(task_handler_lcd);
+            sleep(25);
+
+            // -> TESTING DOSIF_PH
+            TEST_STATE= DOSIF_PH;
+            vTaskResume(task_handler_lcd);
+            // motor_dosificador(GPIO_DOSIF_ACIDULANTE);
+
+            // -> TESTING DHT11
+            TEST_STATE= DHT11;
+            vTaskResume(task_handler_lcd);
+            sleep(25);
+
+            // -> TESTING COOLERS
+            TEST_STATE= COOLERS;
+            vTaskResume(task_handler_lcd);
+            // gpio_set_level(GPIO_COOLERS, ON);
+            sleep(25);
+            // gpio_set_level(GPIO_COOLERS, OFF);
+
+            // -> TESTING OFF
+            TEST_STATE= OFF;
+            vTaskResume(task_handler_lcd);
+            printf("SMOKE TEST FINISHED!\n");
+            SMOKE_TEST= OFF;       
+        }
+        else
+        {
+            // Cuando se cumple el tiempo seteado en la constante, llama a la función que realiza el chequeo del estado en firestore
+            if(WIFI_IS_CONNECTED && timer_fs_state_check > 100*STATE_CHECK_DELAY)
             {
-                printf("Cultivando %s...\n",tipo_planta);
-                fs_check_limits(tipo_planta);
-                fs_stats_actualization(SYSTEM_ID);
-                CROP_RUNNING = true;
+                printf("VALIDAMOS EL ESTADO IDLE\n");
+                timer_fs_state_check = 0;
+                if(fs_check_state(SYSTEM_ID, tipo_planta) > 0)
+                {
+                    printf("Cultivando %s...\n",tipo_planta);
+                    fs_check_limits(tipo_planta);
+                    fs_stats_actualization(SYSTEM_ID);
+                    CROP_RUNNING = true;
+                }
             }
         }
 
@@ -100,10 +173,10 @@ void app_main()
         
         // printf("Por dosificar ACIDULANTE\n"); 
 
-        // motor_dosificador(GPIO_BRAZO_SONDAS); 
+        // motor_dosificador(GPIO_BRAZO_SONDAS);
 
         // gpio_set_level(GPIO_ALIMENTACION_AUX, ON);     
-        medir_ec();
+        // medir_ec();
         
         /** CONTROL TASK: DISPLAY **/
         if(timer_display > DISPLAY_INACTIVITY)    // APAGADO

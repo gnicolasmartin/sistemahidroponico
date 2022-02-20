@@ -35,6 +35,17 @@
 #define ON                      1
 #define OFF                     0
 
+// TEST STATES
+#define LIGHTS                  1
+#define PUMP                    2
+#define SONDA_EC                3
+#define DOSIF_SOL_A             4
+#define DOSIF_SOL_B             5
+#define SONDA_PH                6
+#define DOSIF_PH                7
+#define DHT11                   8
+#define COOLERS                 9
+
 // PROTOTYPES
 void toggle_led(void *pvParameter);
 void leer_botones(void *pvParameter);
@@ -61,6 +72,11 @@ extern char WIFI_SSIDS[3][MAX_LENGTH_SSID];
 extern int  WIFI_SSIDS_SCANNED;
 extern bool MIX_ON;
 extern bool IRRIGATION_ON;
+//Crop status for TESTING MODE
+extern bool CROP_RUNNING;
+extern bool SMOKE_TEST;
+extern int  TEST_STATE;
+extern bool WIFI_IS_CONNECTED;
 
 
 
