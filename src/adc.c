@@ -59,6 +59,7 @@ void print_char_val_type(esp_adc_cal_value_t val_type)
 void medir_ph(void)
 {
     uint32_t adc_reading = 0;
+    float aux;
     
     //Multisampling
     for (int i = 0; i < NO_OF_SAMPLES; i++) {
@@ -76,7 +77,9 @@ void medir_ph(void)
 
     //Convert adc_reading to voltage in mV
     float voltage_ph = ((float) esp_adc_cal_raw_to_voltage(adc_reading, adc_chars_ph))/1000;
-    ph = (uint32_t) -6.718671*voltage_ph + 21.78108;
+    //aux = -6.718671*voltage_ph + 21.78108;
+    aux = -0.01132054*adc_reading + 27.06377;
+    ph = (uint32_t) aux;
 
     printf("Raw: %d\tVoltage: %fV\t PH: %d\n", adc_reading, voltage_ph, ph);
 }
