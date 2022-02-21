@@ -42,11 +42,11 @@ void app_main()
 
     /************** Variables **************/
     // Timers declaration
-    int timer_pump, timer_ph, timer_ec, timer_humidity, timer_temperature, timer_display, timer_regulate_water, timer_light, timer_fs_state_check;
+    int timer_pump, timer_habitat, timer_display, timer_regulate_water, timer_light, timer_fs_state_check;
 
     // Timers initialization
     // Quizas no conviene inicializalos en CERO para no tener que esperar 24hs a que corra... ¿Y si empiezan en su valor maximo?¿Correrian todas las tareas juntas?
-    timer_pump= timer_ph= timer_ec= timer_humidity= timer_temperature= timer_display= timer_regulate_water= timer_light= timer_fs_state_check= 0;
+    timer_pump= timer_habitat= timer_display= timer_regulate_water= timer_light= timer_fs_state_check= 0;
     // timer_light= LIGHT_TIME_OFF - 10;
 
 
@@ -58,10 +58,10 @@ void app_main()
     // Start suspended
     xTaskCreate(&control_lcd, "control_lcd", 4096, NULL, 2, &task_handler_lcd);
     vTaskSuspend(task_handler_lcd);
-    // xTaskCreate(&regular_agua, "regular_agua", 4096, NULL, 2, &task_handler_regulate_water);
-    // vTaskSuspend(task_handler_regulate_water);
-    // xTaskCreate(&measure_temp_humid, "measure_temp_humid", 4096, NULL, 1, NULL);
-    
+    xTaskCreate(&regulate_water, "regulate_water", 4096, NULL, 2, &task_handler_regulate_water);
+    vTaskSuspend(task_handler_regulate_water);
+    xTaskCreate(&measure_habitat, "measure_habitat", 4096, NULL, 1, &task_handler_regulate_habitat);
+    vTaskSuspend(task_handler_regulate_habitat);
 
     // EN DUDA SI QUEDAN O NO
     // xTaskCreate(&toggle_led, "toggle_led", 1024, NULL, 1, NULL);
@@ -87,42 +87,53 @@ void app_main()
             gpio_set_level(GPIO_LIGHT, OFF);
             gpio_set_level(GPIO_COOLERS_LIGHT, OFF);
 
-            // -> TESTING PUMP
-            TEST_STATE= PUMP;
-            vTaskResume(task_handler_lcd);
-            gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
-            sleep(25);
-            gpio_set_level(GPIO_BOMBA_PRINCIPAL, OFF);
-
-            // -> TESTING SONDA_EC
-            TEST_STATE= SONDA_EC;
-            vTaskResume(task_handler_lcd);
-            sleep(25);
-
-            // -> TESTING DOSIF_SOL_A
-            TEST_STATE= DOSIF_SOL_A;
-            vTaskResume(task_handler_lcd);
-            // motor_dosificador(GPIO_DOSIF_SOLUCION_A);
-
-            // -> TESTING DOSIF_SOL_B
-            TEST_STATE= DOSIF_SOL_B;
-            vTaskResume(task_handler_lcd);
-            // motor_dosificador(GPIO_DOSIF_SOLUCION_B);
+            // // -> TESTING PUMP
+            // TEST_STATE= PUMP;
+            // vTaskResume(task_handler_lcd);
+            // gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
+            // sleep(25);
+            // gpio_set_level(GPIO_BOMBA_PRINCIPAL, OFF);            
             
-            // -> TESTING SONDA_PH
-            TEST_STATE= SONDA_PH;
-            vTaskResume(task_handler_lcd);
-            sleep(25);
+            // // -> TESTING SONDA_PH
+            // TEST_STATE= SONDA_PH;
+            // vTaskResume(task_handler_lcd);
+            // void medir_ph(void);            
+            // sleep(25);
 
-            // -> TESTING DOSIF_PH
-            TEST_STATE= DOSIF_PH;
+            // // -> TESTING DOSIF_PH
+            // TEST_STATE= DOSIF_PH;
+            // vTaskResume(task_handler_lcd);
+            // // motor_dosificador(GPIO_DOSIF_ACIDULANTE);
+
+            // // -> TESTING SONDA_EC
+            // TEST_STATE= SONDA_EC;
+            // vTaskResume(task_handler_lcd);
+            // sleep(25);
+
+            // // -> TESTING DOSIF_SOL_A
+            // TEST_STATE= DOSIF_SOL_A;
+            // vTaskResume(task_handler_lcd);
+            // // motor_dosificador(GPIO_DOSIF_SOLUCION_A);
+
+            // // -> TESTING DOSIF_SOL_B
+            // TEST_STATE= DOSIF_SOL_B;
+            // vTaskResume(task_handler_lcd);
+            // // motor_dosificador(GPIO_DOSIF_SOLUCION_B);
+
+            TEST_STATE= REGULATE_WATER;
             vTaskResume(task_handler_lcd);
-            // motor_dosificador(GPIO_DOSIF_ACIDULANTE);
+            PH_MAX= 65; 
+            PH_MIN= 60; 
+            EC_MAX= 2300; 
+            EC_MIN= 2000;
+            vTaskResume(task_handler_regulate_water);
+            while(eTaskGetState(task_handler_regulate_water) != eSuspended);
 
             // -> TESTING DHT11
             TEST_STATE= DHT11;
             vTaskResume(task_handler_lcd);
-            sleep(25);
+             vTaskResume(task_handler_regulate_habitat);
+            while(eTaskGetState(task_handler_regulate_habitat) != eSuspended);
 
             // -> TESTING COOLERS
             TEST_STATE= COOLERS;
@@ -163,10 +174,7 @@ void app_main()
         // Increments timers value
         timer_pump++;
         timer_light++;
-        timer_ph++;
-        timer_ec++;
-        timer_humidity++;
-        timer_temperature++;
+        timer_habitat++;
         timer_display++;
         timer_regulate_water++;
 
@@ -241,7 +249,6 @@ void app_main()
             timer_light= 0;
         }
 
-
         /** CONTROL TASK: WATER MEASURE **/
         if(timer_regulate_water > REGULATE_WATER_TIME_OFF)  // TIME ON
         {                  
@@ -254,37 +261,18 @@ void app_main()
             }
         }
 
-    //     /** CONTROL TASK: HUMIDITY **/
-    //     if(timer_humidity <= HUMIDITY_TIME_OFF)    // TIME OFF
-    //     {
-    //         timer_humidity++;        
-    //     }
-    //     else  // TIME ON
-    //     {
-    //         timer_humidity++;
-    //         vTaskResume(task_handler_regulate_water);
+        /** CONTROL TASK: HABITAT MEASURE **/
+        if(timer_habitat > HABITAT_TIME_OFF)  // TIME ON
+        {                  
+            vTaskResume(task_handler_regulate_habitat);
 
-    //         if(eTaskGetState (task_handler_regulate_water) == eSuspended) // TASK AUTO SUSPEND THEIR SELF WHEN FINISH
-    //         {
-    //             timer_humidity= 0;                
-    //         }
-    //     }
-
-    //     /** CONTROL TASK: TEMPERATURE **/
-    //     if(timer_temperature <= TEMPERATURE_TIME_OFF)    // TIME OFF
-    //     {
-    //         timer_temperature++;        
-    //     }
-    //     else  // TIME ON
-    //     {
-    //         timer_temperature++;
-    //         vTaskResume(task_handler_regulate_water);
-
-    //         if(eTaskGetState (task_handler_regulate_water) == eSuspended) // TASK AUTO SUSPEND THEIR SELF WHEN FINISH
-    //         {
-    //             timer_temperature= 0;                
-    //         }
-    //     }
+            if(eTaskGetState(task_handler_regulate_habitat) == eSuspended) // TASK AUTO SUSPEND THEIR SELF WHEN FINISH
+            {
+                printf("SE AUTOSUSPENDIO LA TAREA\n");
+                timer_habitat= 0;                
+            }
+        }
+    
         sleep(1); // Base de tiempo 1 segundo
     } 
 

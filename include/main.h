@@ -22,10 +22,12 @@
 // PROTOTYPES
 extern TaskHandle_t task_handler_firestore;
 extern TaskHandle_t task_handler_regulate_water;
+extern TaskHandle_t task_handler_regulate_habitat;
 extern TaskHandle_t task_handler_input;
 extern TaskHandle_t task_handler_menu;
 extern TaskHandle_t task_handler_lcd;
 extern TaskHandle_t task_handler_motor;
+extern uint32_t PH_MAX, PH_MIN, EC_MAX, EC_MIN;
 extern bool WIFI_IS_CONNECTED;
 
 

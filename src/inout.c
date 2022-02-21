@@ -41,11 +41,8 @@ void gpio_init(void)
     gpio_pad_select_gpio(GPIO_TEST_LED);
     gpio_set_direction(GPIO_TEST_LED,GPIO_MODE_OUTPUT);
 
-    // gpio_pad_select_gpio(GPIO_COOL_1);
-    // gpio_set_direction(GPIO_COOL_1,GPIO_MODE_OUTPUT);
-
-    // gpio_pad_select_gpio(GPIO_COOL_2);
-    // gpio_set_direction(GPIO_COOL_2,GPIO_MODE_OUTPUT);
+    gpio_pad_select_gpio(GPIO_COOLERS_HABITAT);
+    gpio_set_direction(GPIO_COOLERS_HABITAT,GPIO_MODE_OUTPUT);
 
     // OJO QUE ESTAMOS USANDO EL GPIO DE EXTRACCION O INTRODUCCION DE AIRE
     gpio_pad_select_gpio(GPIO_COOLERS_LIGHT);

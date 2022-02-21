@@ -20,7 +20,7 @@
 #define NO_OF_SAMPLES            64 
 #define SONDA_STABILIZATION_TIME 60    // in seconds
 #define WATER_STABILIZATION_TIME 300   // in seconds (5 min)
-// State Machine"regular_agua" task
+// State Machine"regulate_water" task
 enum{
     INIT,
     MEASURE,
@@ -28,11 +28,12 @@ enum{
     REGULATE_PH,
     REGULATE_EC,
     MIX_WATER,
-    END
+    END,
 };
 // Status of measurement
 #define REGULATED               0        
 #define DESREGULATED            1
+#define ALERT                   2
 
 // Valores de parametros (ESTO TIENE QUE IR EN UN ARCHIVO DE CONFIGURACION! Y TIENE QUE ACTUALIZARSE LOS VALORES DEFAULT CON LAS BASE DE DATOS)
 // Lechuga
@@ -50,5 +51,5 @@ void print_char_val_type(esp_adc_cal_value_t);
 void adc_init(void);
 void medir_ph(void);
 void medir_ec(void);
-int analizar_ph(void);
-int analizar_ec(void);
+int analyse_ph(void);
+int analyse_ec(void);

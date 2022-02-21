@@ -13,7 +13,7 @@
 #include "tasks.h"
 
 uint8_t machine_state = STATE_INIT;
-TaskHandle_t task_handler_motor, task_handler_firestore, task_handler_regulate_water, task_handler_input, task_handler_menu, task_handler_lcd, task_handler_dosificador;
+TaskHandle_t task_handler_motor, task_handler_firestore, task_handler_regulate_water, task_handler_regulate_habitat, task_handler_input, task_handler_menu, task_handler_lcd, task_handler_dosificador;
 uint32_t temperature=25, humidity=70, ph=3, ec=1800;
 
 //Variables para el manejo de menúes
@@ -123,9 +123,10 @@ void toggle_led(void *pvParameter)
     }
 }
 
-void regular_agua(void *pvParameter)
+void regulate_water(void *pvParameter)
 {
     static int ESTADO= INIT;
+    int result;
 
     while (1) 
     {
@@ -157,18 +158,29 @@ void regular_agua(void *pvParameter)
             case ANALYZE:
                 printf("ANALYZE\n");
                 
-                if(analizar_ph() == DESREGULATED)
+                result= analyse_ph();
+
+                if(result == REGULATED)
+                {
+                    result= analyse_ec();
+                    if(result == DESREGULATED)
+                    {
+                        ESTADO= REGULATE_EC;
+                    }
+                    else
+                    {
+                        ESTADO= END;
+                    }
+                }
+                else if(result == DESREGULATED)
                 {
                     ESTADO= REGULATE_PH;
-                }
-                else if(analizar_ec() == DESREGULATED)
-                {
-                    ESTADO= REGULATE_EC;
                 }
                 else
                 {
                     ESTADO= END;
                 }
+                
 
             break;
 
@@ -206,10 +218,13 @@ void regular_agua(void *pvParameter)
 
                 MIX_ON= false;
                 ESTADO= MEASURE;
-
             break;
 
             case END:
+                // ACA TENDRIAMOS QUE AVISARLE AL USUARIO QUE ESTA TODO MAL...
+                // OPCION 1 EL ESP ESCRIBE ALGUNA ALERTA EN FIRESTORE LA APP LO LEE Y ALERTA
+                // OPCION 2 EL ESP ESCRIBE COMO SIEMPRE, LA APP LEE COMO SIEMPRE Y VERIFICA SI ESTA TODO OK. SINO ALERTA
+
                 printf("END\n");
                 // Levanta la sonda
                 motor_sonda(DEGREE_180_UP);
@@ -231,6 +246,26 @@ void regular_agua(void *pvParameter)
 
             break;
         }
+    }
+}
+
+void measure_habitat(void *pvParameter)
+{
+    uint8_t aux[5], i;
+    while (1) 
+    {
+        dht11_init();
+
+        for(i=0;i<5;i++)
+        {
+            aux[i]=dht11_read();
+        }
+     
+        temperature = aux[2];
+        humidity = aux[0];
+
+        printf("TEMP.: %d°, HUMID.: %d \n", temperature, humidity);
+        vTaskSuspend(NULL);
     }
 }
 
@@ -346,8 +381,6 @@ void navegar_menu(void *pvParameter)
 
                 sprintf(WIFI_PSWD, "%s", PASSWORD_HARDCODEADO);//PWD);
                 wifi_connect();
-
-                vTaskDelay(100 / portTICK_PERIOD_MS);
 
                 if(WIFI_IS_CONNECTED)
                 {
@@ -510,34 +543,39 @@ void control_lcd(void *pvParameter)
                         lcd_send_string("Prueba luces", LCD_ROW_2);
                         break;
                     
-                    case PUMP:
-                        printf("Prueba riego\n");
-                        lcd_send_string("Prueba riego", LCD_ROW_2);
-                        break;
+                    // case PUMP:
+                    //     printf("Prueba riego\n");
+                    //     lcd_send_string("Prueba riego", LCD_ROW_2);
+                    //     break;
 
-                    case SONDA_EC:
-                        printf("Prueba sonda EC\n");
-                        lcd_send_string("Prueba sonda EC", LCD_ROW_2);
-                        break;
+                    // case SONDA_EC:
+                    //     printf("Prueba sonda EC\n");
+                    //     lcd_send_string("Prueba sonda EC", LCD_ROW_2);
+                    //     break;
 
-                    case DOSIF_SOL_A:
-                        printf("Prueba dosif A\n");
-                        lcd_send_string("Prueba dosif A", LCD_ROW_2);
-                        break;
+                    // case DOSIF_SOL_A:
+                    //     printf("Prueba dosif A\n");
+                    //     lcd_send_string("Prueba dosif A", LCD_ROW_2);
+                    //     break;
 
-                    case DOSIF_SOL_B:
-                        printf("Prueba dosif B\n");
-                        lcd_send_string("Prueba dosif B", LCD_ROW_2);
-                        break;
+                    // case DOSIF_SOL_B:
+                    //     printf("Prueba dosif B\n");
+                    //     lcd_send_string("Prueba dosif B", LCD_ROW_2);
+                    //     break;
 
-                    case SONDA_PH:
-                        printf("Prueba sonda PH\n");
-                        lcd_send_string("Prueba sonda PH", LCD_ROW_2);
-                        break;
+                    // case SONDA_PH:
+                    //     printf("Prueba sonda PH\n");
+                    //     lcd_send_string("Prueba sonda PH", LCD_ROW_2);
+                    //     break;
 
-                    case DOSIF_PH:
-                        printf("Prueba dosif PH\n");
-                        lcd_send_string("Prueba dosif PH", LCD_ROW_2);
+                    // case DOSIF_PH:
+                    //     printf("Prueba dosif PH\n");
+                    //     lcd_send_string("Prueba dosif PH", LCD_ROW_2);
+                    //     break;
+
+                    case REGULATE_WATER:
+                        printf("Prueba Regular\n");
+                        lcd_send_string("Prueba Regular", LCD_ROW_2);
                         break;
 
                     case DHT11:
@@ -615,116 +653,5 @@ void control_lcd(void *pvParameter)
             lcd_send_string("Conexión fallida!", LCD_ROW_2);
             vTaskSuspend(task_handler_lcd);   
         }
-    }
-}
-
-// Update values in firestore database 
-void firestore_task(void *pvParameter)
-{
-    static uint32_t u32DocLength;
-    static char tcDoc[FIRESTORE_DOC_MAX_SIZE];
-
-    init_firestore();
-    
-    while(1)
-    {
-        if(entradas_antirrebote[0].level)   // 3V3 
-        {
-            // Apagamos el LED
-            gpio_set_level(GPIO_TEST_LED,0);
-            
-            u32DocLength = snprintf(tcDoc, sizeof(tcDoc), " ");
-
-            // Leemos de firestore un documento
-            firestore_err_t FIRESTORE_STATUS= firestore_get_document(PLANTS_COLLECTION_ID, PLANT_DOCUMENT_ID, tcDoc, &u32DocLength);
-
-            // Chequeamos si hay error
-            if(FIRESTORE_STATUS != FIRESTORE_OK)
-            {
-                printf("ERROR: Couldn't get document\n");
-            }
-
-            // Creamos un archivo JSON para respaldar el documento leido de firestore
-            FILE* f = fopen("/spiffs/document.json", "w");    
-
-            // Chequeamos si hay error
-            if (f != NULL)                                   
-            {
-                // Guardamos el JSON en un archivo
-                fprintf(f, "%s", tcDoc);
-                fputc('\0', f);
-                fclose(f); 
-            }
-
-            // Actualizamos el valor de un campo
-            char valor[100]; 
-            itoa(rand(), valor, 10);
-            int value = replace_value("/spiffs/document.json", "temperature", valor);
-
-            // Chequeamos si hay error
-            if(value == -1)
-            {
-                printf("ERROR: Couldn´t replace value in JSON file\n");
-            }
-
-            // value = search_value("/spiffs/document.json", "temperature", valor);
-
-            // if(value == -1)
-            // {
-            //      printf("ERROR: Couldn´t search value in JSON file\n");
-            // }
-
-            // printf("Leimos la key name y es: %s\n", valor);
-
-            // Abrimos el JSON con el campo actualizado
-            f = fopen("/spiffs/document.json", "r");
-
-            // Pasamos el contenido del JSON a una variable
-            fread(tcDoc, FIRESTORE_DOC_MAX_SIZE, 1, f);
-
-            // Cerramos archivo JSON de respaldo
-            fclose(f);
-
-            // Actualizamos el documento en firestore
-            FIRESTORE_STATUS= firestore_update_document(ESP_COLLECTION_ID, ESP_DOCUMENT_ID, tcDoc, &u32DocLength);
-            
-            // Chequeamos si hay error
-            if(FIRESTORE_STATUS != FIRESTORE_OK)
-            {
-                printf("ERROR: Couldn't update document\n");
-            }
-            
-        }
-        else                                // GND
-        {
-            // Encendemos el LED
-            gpio_set_level(GPIO_TEST_LED,1);
-        }
-
-        vTaskDelay(FIRESTORE_PERIOD_MS / portTICK_PERIOD_MS);
-    }
-}
-
-// borrar luego
-void dosificador(void *pvParameter)
-{
-    motor_dosificador(GPIO_DOSIF_ACIDULANTE);
-    vTaskDelay(1 / portTICK_PERIOD_MS);
-}
-
-void measure_temp_humid(void *pvParameter)
-{
-    uint8_t aux[5], i;
-    while (1) {
-        dht11_init();
-        for(i=0;i<5;i++)
-        {
-            aux[i]=dht11_read();
-        }
-        temperature = aux[2];
-        humidity = aux[0];
-
-        printf("TEMP.: %d°, HUMID.: %d \n", temperature, humidity);
-        vTaskDelay(10000 / portTICK_PERIOD_MS);     
     }
 }

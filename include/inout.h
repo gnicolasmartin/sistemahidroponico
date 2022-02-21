@@ -26,9 +26,8 @@
 #define GPIO_PULSADOR_ARRIBA    32
 #define GPIO_PULSADOR_ABAJO     33
 // COOLERS
-// #define GPIO_COOL_1             14
-// #define GPIO_COOL_2             12
-#define GPIO_COOLERS_LIGHT      15  // Este valor es del GPIO DE EXTRACCION O INTRODUCCION DE AIRE
+#define GPIO_COOLERS_LIGHT      15
+#define GPIO_COOLERS_HABITAT    16
 // BOMBAS
 #define GPIO_BOMBA_PRINCIPAL    23
 #define GPIO_DOSIF_SOLUCION_A   12

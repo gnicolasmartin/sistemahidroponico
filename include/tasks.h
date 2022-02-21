@@ -37,24 +37,25 @@
 
 // TEST STATES
 #define LIGHTS                  1
-#define PUMP                    2
-#define SONDA_EC                3
-#define DOSIF_SOL_A             4
-#define DOSIF_SOL_B             5
-#define SONDA_PH                6
-#define DOSIF_PH                7
-#define DHT11                   8
-#define COOLERS                 9
+// #define PUMP                    2
+// #define SONDA_PH                3
+// #define DOSIF_PH                4
+// #define SONDA_EC                5
+// #define DOSIF_SOL_A             6
+// #define DOSIF_SOL_B             7
+#define REGULATE_WATER          2
+#define DHT11                   3
+#define COOLERS                 4
 
 // PROTOTYPES
 void toggle_led(void *pvParameter);
 void leer_botones(void *pvParameter);
-void regular_agua(void *pvParameter);
+void regulate_water(void *pvParameter);
 void navegar_menu(void *pvParameter);
 void control_lcd(void *pvParameter);
 void firestore_task(void *pvParameter);
 void state_machine(void *pvParameter);
-void measure_temp_humid(void *pvParameter);
+void measure_habitat(void *pvParameter);
 
 // EXTERNS
 //Estructura de entradas antirrebote

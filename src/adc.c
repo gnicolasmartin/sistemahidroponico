@@ -78,8 +78,8 @@ void medir_ph(void)
     //Convert adc_reading to voltage in mV
     float voltage_ph = ((float) esp_adc_cal_raw_to_voltage(adc_reading, adc_chars_ph))/1000;
     //aux = -6.718671*voltage_ph + 21.78108;
-    aux = -0.01132054*adc_reading + 27.06377;
-    ph = (uint32_t) aux;
+    aux = (-0.01132054*adc_reading + 27.06377) * 10;
+    ph =  (uint32_t) aux;
 
     printf("Raw: %d\tVoltage: %fV\t PH: %d\n", adc_reading, voltage_ph, ph);
 }
@@ -111,22 +111,30 @@ void medir_ec(void)
     printf("Raw: %d\tVoltage: %fmV\t EC: %dppm\n", adc_reading, voltage_ec, ec);
 }
 
-int analizar_ph(void)
+int analyse_ph(void)
 {
-    if(ph > PH_MIN && ph < PH_MAX)
+    if(ph < PH_MIN)
     {
-        return REGULATED;
+        return ALERT;
+    }
+    else if(ph > PH_MAX)
+    {
+        return DESREGULATED;
     }
     
-    return DESREGULATED;
+    return REGULATED;
 }
 
-int analizar_ec(void)
+int analyse_ec(void)
 {
-    if(ec > EC_MIN && ec < EC_MAX)
+    if(ec > EC_MAX)
     {
-        return REGULATED;
+        return ALERT;
     }
-    
-    return DESREGULATED;
+    else if(ec < EC_MIN)
+    {
+        return DESREGULATED;
+    }
+
+    return REGULATED;
 }
