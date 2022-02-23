@@ -41,8 +41,7 @@
 // #define SONDA_PH                3
 // #define DOSIF_PH                4
 // #define SONDA_EC                5
-// #define DOSIF_SOL_A             6
-// #define DOSIF_SOL_B             7
+// #define DOSIF_EC                6
 #define REGULATE_WATER          2
 #define DHT11                   3
 #define COOLERS                 4
@@ -78,6 +77,3 @@ extern bool CROP_RUNNING;
 extern bool SMOKE_TEST;
 extern int  TEST_STATE;
 extern bool WIFI_IS_CONNECTED;
-
-
-

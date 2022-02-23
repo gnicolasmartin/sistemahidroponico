@@ -89,7 +89,7 @@ void init_antirrebote(void)
     }
 }
 
-void dht11_init(void)
+uint8_t dht11_init(void)
 {
     gpio_pad_select_gpio(GPIO_SENSOR_TEMP);                 
     gpio_set_direction(GPIO_SENSOR_TEMP,GPIO_MODE_OUTPUT);
@@ -98,7 +98,7 @@ void dht11_init(void)
     usleep(4000);
 
     gpio_set_level(GPIO_SENSOR_TEMP, 0);
-    usleep(18000);
+    usleep(18000);  //LS: Probé con 19000 y emperó un poco
 
     gpio_set_level(GPIO_SENSOR_TEMP, 1);
     usleep(30);
@@ -107,24 +107,16 @@ void dht11_init(void)
     gpio_set_direction(GPIO_SENSOR_TEMP,GPIO_MODE_INPUT);
 
     if(dht11_check_response())
+    {
         printf("DHT11 INIT OK\n");
+        return 1;
+    }
     else
+    {
         printf("DHT11 INIT FAILED\n");
-/*
-    gpio_pad_select_gpio(GPIO_SENSOR_TEMP);      
-    gpio_set_direction(GPIO_SENSOR_TEMP, GPIO_MODE_OUTPUT);
-    //gpio_set_level(GPIO_SENSOR_TEMP,1);
-    //ets_delay_us(4000);
-
-    gpio_set_level(GPIO_SENSOR_TEMP,0);
-    //vTaskDelay(36 / portTICK_RATE_MS);
-    ets_delay_us(22000);
-    gpio_set_level(GPIO_SENSOR_TEMP,1);
-    ets_delay_us(43);
-    gpio_pad_select_gpio(GPIO_SENSOR_TEMP);      
-    gpio_set_direction(GPIO_SENSOR_TEMP, GPIO_MODE_INPUT);*/
+        return 0;
+    }
 }
-
 
 uint8_t dht11_check_response(void)
 {
@@ -135,24 +127,18 @@ uint8_t dht11_check_response(void)
     {
         usleep(80);
         if(gpio_get_level(GPIO_SENSOR_TEMP))
-        {
             Flag_response = 1;
-        }
         else
             return 0;
     }
 
-
-    for(i=0;i<200;i++)
+    Flag_response = 0;
+    for(i=0;i<80;i++)
     {
         if(!gpio_get_level(GPIO_SENSOR_TEMP))
         {
             Flag_response = 1;
             break;
-        }
-        else
-        {
-            Flag_response = 0;
         }
         usleep(1);
     }
@@ -168,12 +154,12 @@ uint8_t dht11_read(void)
         error=1;
         for(i=0;i<120;i++)
         {
-            usleep(1);
             if(gpio_get_level(GPIO_SENSOR_TEMP))
             {
                 error=0;
                 break;
             }
+            usleep(1);
         }
         if(error==1)
         {
@@ -192,12 +178,12 @@ uint8_t dht11_read(void)
         error=1;
         for(i=0;i<120;i++)
         {
-            usleep(1);
             if(!gpio_get_level(GPIO_SENSOR_TEMP))
             {
                 error=0;
                 break;
             }
+            usleep(1);
         }
         if(error==1)
         {
@@ -235,8 +221,8 @@ void motor_sonda(int dir)
     }
 }
 
-// Control de los dosificadores
-void motor_dosificador(int dosificador)
+// Control de los dosificadores de pH
+void dispenser_ph()
 {
     int i = 0; 
     uint8_t pre_estado=0; 
@@ -247,13 +233,43 @@ void motor_dosificador(int dosificador)
         if( pre_estado == 1 )
         {
             pre_estado=0;
-            gpio_set_level(dosificador, OFF);
+            gpio_set_level(GPIO_DOSIF_ACIDULANTE, OFF);
             //printf("CAMBIO DE ESTADO 0\n");
         }
         else
         {
             pre_estado=1;
-            gpio_set_level(dosificador, ON);
+            gpio_set_level(GPIO_DOSIF_ACIDULANTE, ON);
+            //printf("CAMBIO DE ESTADO 1\n");
+        }
+        
+        usleep(PERIOD_uSEG_DOSIF); // dormimos 2,606ms (velocidad de giro)
+    
+        i+= PERIOD_uSEG_DOSIF;
+    }
+}
+
+// Control de los dosificadores de EC
+void dispenser_ec()
+{
+    int i = 0; 
+    uint8_t pre_estado=0; 
+    // 2 i -> 1 paso -> 1.8 grados
+    // 100 i -> 50 pasos -> 90 grados
+    while(i < TIME_uSEG_FOR_1ML)
+    {
+        if( pre_estado == 1 )
+        {
+            pre_estado=0;
+            gpio_set_level(GPIO_DOSIF_SOLUCION_A, OFF);
+            gpio_set_level(GPIO_DOSIF_SOLUCION_B, OFF);
+            //printf("CAMBIO DE ESTADO 0\n");
+        }
+        else
+        {
+            pre_estado=1;
+            gpio_set_level(GPIO_DOSIF_SOLUCION_A, ON);
+            gpio_set_level(GPIO_DOSIF_SOLUCION_B, ON);
             //printf("CAMBIO DE ESTADO 1\n");
         }
         

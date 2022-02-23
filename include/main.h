@@ -18,11 +18,12 @@
 #include "wifi.h"
 #include "filesystem.h"
 #include "times.h"
+#include <esp_task_wdt.h>
 
 // PROTOTYPES
 extern TaskHandle_t task_handler_firestore;
 extern TaskHandle_t task_handler_regulate_water;
-extern TaskHandle_t task_handler_regulate_habitat;
+extern TaskHandle_t task_handler_measure_habitat;
 extern TaskHandle_t task_handler_input;
 extern TaskHandle_t task_handler_menu;
 extern TaskHandle_t task_handler_lcd;

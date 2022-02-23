@@ -157,7 +157,7 @@ void wifi_event_handler(void *pvArg, esp_event_base_t pcEventBase, int32_t s32Ev
       {
         esp_wifi_connect();
         stCtx.u08RetryCount++;
-        printf("[HANDLER] WiFi Retrying to connect\n");
+        // printf("[HANDLER] WiFi Retrying to connect\n");
         xEventGroupSetBits(stCtx.stWifiEventGroup, APP_WIFI_FAIL_BIT);
       }
       else

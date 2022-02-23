@@ -21,7 +21,7 @@ esp_vfs_spiffs_conf_t conf =
 
 uint8_t init_ok = 0;
 bool CROP_RUNNING = false; // TEST: Volver a False
-bool SMOKE_TEST = false; 
+bool SMOKE_TEST = false;
 int  TEST_STATE = OFF;
 char tipo_planta[50];
 
@@ -38,7 +38,9 @@ void app_main()
     gpio_init();    
     adc_init();
     lcd_init();
-    // dht11_init();
+    dht11_init();
+
+    
 
     /************** Variables **************/
     // Timers declaration
@@ -46,7 +48,8 @@ void app_main()
 
     // Timers initialization
     // Quizas no conviene inicializalos en CERO para no tener que esperar 24hs a que corra... ¿Y si empiezan en su valor maximo?¿Correrian todas las tareas juntas?
-    timer_pump= timer_habitat= timer_display= timer_regulate_water= timer_light= timer_fs_state_check= 0;
+    timer_pump= timer_habitat= timer_display= timer_regulate_water= timer_light= 0;
+    timer_fs_state_check= 0;//STATE_CHECK_DELAY;
     // timer_light= LIGHT_TIME_OFF - 10;
 
 
@@ -60,8 +63,8 @@ void app_main()
     vTaskSuspend(task_handler_lcd);
     xTaskCreate(&regulate_water, "regulate_water", 4096, NULL, 2, &task_handler_regulate_water);
     vTaskSuspend(task_handler_regulate_water);
-    xTaskCreate(&measure_habitat, "measure_habitat", 4096, NULL, 1, &task_handler_regulate_habitat);
-    vTaskSuspend(task_handler_regulate_habitat);
+    xTaskCreate(&measure_habitat, "measure_habitat", 4096, NULL, 1, &task_handler_measure_habitat);
+    // vTaskSuspend(task_handler_measure_habitat);
 
     // EN DUDA SI QUEDAN O NO
     // xTaskCreate(&toggle_led, "toggle_led", 1024, NULL, 1, NULL);
@@ -77,81 +80,69 @@ void app_main()
         // Se activa desde el menú de navegación
         if(SMOKE_TEST)
         {
-            printf("SMOKE TEST ACTIVATED!\n");
-            // -> TESTING LIGHTS
-            TEST_STATE= LIGHTS;
-            vTaskResume(task_handler_lcd);
-            gpio_set_level(GPIO_LIGHT, ON);
-            gpio_set_level(GPIO_COOLERS_LIGHT, ON);
-            sleep(25);
-            gpio_set_level(GPIO_LIGHT, OFF);
-            gpio_set_level(GPIO_COOLERS_LIGHT, OFF);
-
-            // // -> TESTING PUMP
-            // TEST_STATE= PUMP;
-            // vTaskResume(task_handler_lcd);
-            // gpio_set_level(GPIO_BOMBA_PRINCIPAL, ON);
-            // sleep(25);
-            // gpio_set_level(GPIO_BOMBA_PRINCIPAL, OFF);            
             
-            // // -> TESTING SONDA_PH
-            // TEST_STATE= SONDA_PH;
-            // vTaskResume(task_handler_lcd);
-            // void medir_ph(void);            
-            // sleep(25);
+            switch (TEST_STATE)
+            {
+                // -> TESTING LIGHTS
+                case LIGHTS:
+                    printf("SMOKE TEST ACTIVATED!\n");
+                    vTaskResume(task_handler_lcd);
+                    gpio_set_level(GPIO_LIGHT, ON);
+                    gpio_set_level(GPIO_COOLERS_LIGHT, ON);
+                    sleep(25);
+                    gpio_set_level(GPIO_LIGHT, OFF);
+                    gpio_set_level(GPIO_COOLERS_LIGHT, OFF);
+                    
+                    TEST_STATE= REGULATE_WATER;
+                    vTaskResume(task_handler_lcd);
+                    PH_MAX= 90; 
+                    PH_MIN= 60; 
+                    EC_MAX= 2300; 
+                    EC_MIN= 1100;
+                    vTaskResume(task_handler_regulate_water);
+                    break;
 
-            // // -> TESTING DOSIF_PH
-            // TEST_STATE= DOSIF_PH;
-            // vTaskResume(task_handler_lcd);
-            // // motor_dosificador(GPIO_DOSIF_ACIDULANTE);
+                // -> TESTING REGULATE_WATER
+                case REGULATE_WATER:                
+                    if(eTaskGetState(task_handler_regulate_water) == eSuspended)
+                    {
+                        TEST_STATE= DHT11;
+                        vTaskResume(task_handler_lcd);
+                        vTaskResume(task_handler_measure_habitat);
+                    }
+                    break;
 
-            // // -> TESTING SONDA_EC
-            // TEST_STATE= SONDA_EC;
-            // vTaskResume(task_handler_lcd);
-            // sleep(25);
+                 // -> TESTING DHT11
+                case DHT11:
+                    vTaskResume(task_handler_measure_habitat);
+                    if(eTaskGetState(task_handler_measure_habitat) == eSuspended)
+                    {
+                        // TEST_STATE= COOLERS;
+                        vTaskResume(task_handler_lcd);
+                    }
+                    break;
 
-            // // -> TESTING DOSIF_SOL_A
-            // TEST_STATE= DOSIF_SOL_A;
-            // vTaskResume(task_handler_lcd);
-            // // motor_dosificador(GPIO_DOSIF_SOLUCION_A);
-
-            // // -> TESTING DOSIF_SOL_B
-            // TEST_STATE= DOSIF_SOL_B;
-            // vTaskResume(task_handler_lcd);
-            // // motor_dosificador(GPIO_DOSIF_SOLUCION_B);
-
-            TEST_STATE= REGULATE_WATER;
-            vTaskResume(task_handler_lcd);
-            PH_MAX= 65; 
-            PH_MIN= 60; 
-            EC_MAX= 2300; 
-            EC_MIN= 2000;
-            vTaskResume(task_handler_regulate_water);
-            while(eTaskGetState(task_handler_regulate_water) != eSuspended);
-
-            // -> TESTING DHT11
-            TEST_STATE= DHT11;
-            vTaskResume(task_handler_lcd);
-             vTaskResume(task_handler_regulate_habitat);
-            while(eTaskGetState(task_handler_regulate_habitat) != eSuspended);
-
-            // -> TESTING COOLERS
-            TEST_STATE= COOLERS;
-            vTaskResume(task_handler_lcd);
-            // gpio_set_level(GPIO_COOLERS, ON);
-            sleep(25);
-            // gpio_set_level(GPIO_COOLERS, OFF);
-
-            // -> TESTING OFF
-            TEST_STATE= OFF;
-            vTaskResume(task_handler_lcd);
-            printf("SMOKE TEST FINISHED!\n");
-            SMOKE_TEST= OFF;       
+                // -> TESTING COOLERS
+                case COOLERS:
+                    vTaskResume(task_handler_lcd);
+                    // gpio_set_level(GPIO_COOLERS, ON);
+                    sleep(25);
+                    // gpio_set_level(GPIO_COOLERS, OFF);
+                    TEST_STATE= OFF;
+                    break;
+                
+                default:
+                    vTaskResume(task_handler_lcd);
+                    SMOKE_TEST= false;
+                    TEST_STATE= OFF;
+                    printf("SMOKE TEST FINISHED!\n");
+                    break;
+            }
         }
         else
         {
             // Cuando se cumple el tiempo seteado en la constante, llama a la función que realiza el chequeo del estado en firestore
-            if(WIFI_IS_CONNECTED && timer_fs_state_check > 100*STATE_CHECK_DELAY)
+            if(WIFI_IS_CONNECTED && timer_fs_state_check > STATE_CHECK_DELAY)
             {
                 printf("VALIDAMOS EL ESTADO IDLE\n");
                 timer_fs_state_check = 0;
@@ -180,11 +171,8 @@ void app_main()
 
         
         // printf("Por dosificar ACIDULANTE\n"); 
-
-        // motor_dosificador(GPIO_BRAZO_SONDAS);
-
-        // gpio_set_level(GPIO_ALIMENTACION_AUX, ON);     
         // medir_ec();
+        // medir_ph();
         
         /** CONTROL TASK: DISPLAY **/
         if(timer_display > DISPLAY_INACTIVITY)    // APAGADO
@@ -264,9 +252,9 @@ void app_main()
         /** CONTROL TASK: HABITAT MEASURE **/
         if(timer_habitat > HABITAT_TIME_OFF)  // TIME ON
         {                  
-            vTaskResume(task_handler_regulate_habitat);
+            vTaskResume(task_handler_measure_habitat);
 
-            if(eTaskGetState(task_handler_regulate_habitat) == eSuspended) // TASK AUTO SUSPEND THEIR SELF WHEN FINISH
+            if(eTaskGetState(task_handler_measure_habitat) == eSuspended) // TASK AUTO SUSPEND THEIR SELF WHEN FINISH
             {
                 printf("SE AUTOSUSPENDIO LA TAREA\n");
                 timer_habitat= 0;                

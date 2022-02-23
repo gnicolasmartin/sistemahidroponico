@@ -13,7 +13,7 @@
 #include "tasks.h"
 
 uint8_t machine_state = STATE_INIT;
-TaskHandle_t task_handler_motor, task_handler_firestore, task_handler_regulate_water, task_handler_regulate_habitat, task_handler_input, task_handler_menu, task_handler_lcd, task_handler_dosificador;
+TaskHandle_t task_handler_motor, task_handler_firestore, task_handler_regulate_water, task_handler_measure_habitat, task_handler_input, task_handler_menu, task_handler_lcd, task_handler_dosificador;
 uint32_t temperature=25, humidity=70, ph=3, ec=1800;
 
 //Variables para el manejo de menúes
@@ -123,6 +123,7 @@ void toggle_led(void *pvParameter)
     }
 }
 
+//Tarea que mide EC y PH para regularlos con las soluciones
 void regulate_water(void *pvParameter)
 {
     static int ESTADO= INIT;
@@ -140,8 +141,8 @@ void regulate_water(void *pvParameter)
                 // gpio_set_level(GPIO_ALIMENTACION_AUX, ON);
                 // printf("ALIMENTAMOS SONDA\n");
                 // Tiempo de establecimiento
-                sleep(10); //SONDA_STABILIZATION_TIME
                 printf("ESTABILIZAMOS SONDA\n");
+                sleep(30); //SONDA_STABILIZATION_TIME
 
                 ESTADO= MEASURE;
             break;
@@ -180,14 +181,13 @@ void regulate_water(void *pvParameter)
                 {
                     ESTADO= END;
                 }
-                
 
             break;
 
             case REGULATE_PH:
                 printf("REGULATE_PH\n");
                 // Activa la bomba de acido acidulante
-                // motor_dosificador(GPIO_DOSIF_ACIDULANTE);
+                dispenser_ph();
                 ESTADO= MIX_WATER;
 
             break;
@@ -195,9 +195,7 @@ void regulate_water(void *pvParameter)
             case REGULATE_EC:
                 printf("REGULATE_EC SOLUCION A\n");
                 // Activa la bomba de solucion A y B
-                // motor_dosificador(GPIO_DOSIF_SOLUCION_A);
-                printf("REGULATE_EC SOLUCION B\n");
-                // motor_dosificador(GPIO_DOSIF_SOLUCION_B);
+                dispenser_ec();
                 ESTADO= MIX_WATER;
 
             break;
@@ -241,7 +239,6 @@ void regulate_water(void *pvParameter)
                 // Tarea "regular agua" se autosuspende
                 printf("ESTAMOS AUTOSUSPENDIENDO LA TAREA\n");
                 vTaskSuspend(NULL); 
-
                 ESTADO= INIT;
 
             break;
@@ -249,23 +246,28 @@ void regulate_water(void *pvParameter)
     }
 }
 
+//Tarea para leer la temperatura y la humedad, imprimir el valor y guardarlo
 void measure_habitat(void *pvParameter)
 {
     uint8_t aux[5], i;
     while (1) 
     {
-        dht11_init();
-
-        for(i=0;i<5;i++)
+        if(dht11_init())
         {
-            aux[i]=dht11_read();
-        }
-     
-        temperature = aux[2];
-        humidity = aux[0];
+            for(i=0;i<5;i++)
+                aux[i]=dht11_read();
 
-        printf("TEMP.: %d°, HUMID.: %d \n", temperature, humidity);
-        vTaskSuspend(NULL);
+            if((aux[0]+aux[1]+aux[2]+aux[3]) == aux[4])
+            {
+                temperature = aux[2];
+                humidity = aux[0];
+                printf("TEMP.: %d°, HUMID.: %d \n", temperature, humidity);
+            }
+            else
+                printf(" --> CHECKSUM FAILED\n");
+            // vTaskSuspend(NULL);
+        }
+        sleep(1);
     }
 }
 
@@ -318,6 +320,7 @@ void navegar_menu(void *pvParameter)
                 opt_menu=2;
                 pagina_menu=1;
                 SMOKE_TEST= true;
+                TEST_STATE = LIGHTS;
                 vTaskResume(task_handler_lcd);
             }
             //-->Navega de "Configuración WiFi" -> "Configuración de PWD"
@@ -553,14 +556,9 @@ void control_lcd(void *pvParameter)
                     //     lcd_send_string("Prueba sonda EC", LCD_ROW_2);
                     //     break;
 
-                    // case DOSIF_SOL_A:
+                    // case DOSIF_EC:
                     //     printf("Prueba dosif A\n");
-                    //     lcd_send_string("Prueba dosif A", LCD_ROW_2);
-                    //     break;
-
-                    // case DOSIF_SOL_B:
-                    //     printf("Prueba dosif B\n");
-                    //     lcd_send_string("Prueba dosif B", LCD_ROW_2);
+                    //     lcd_send_string("Prueba dosif EC", LCD_ROW_2);
                     //     break;
 
                     // case SONDA_PH:
@@ -627,30 +625,30 @@ void control_lcd(void *pvParameter)
             lcd_send_command(0x01);    
 
             printf("Dias de cosecha: \n");
-            printf("Días restantes: \n");
+            printf("Dias restantes: \n");
 
             lcd_send_string("Dias de cosecha: ", LCD_ROW_1);
-	        lcd_send_string("Días restantes: ", LCD_ROW_2);     
+	        lcd_send_string("Dias restantes: ", LCD_ROW_2);     
             vTaskSuspend(task_handler_lcd);       
         }
         else if(pagina_menu==5) // WiFi Conectado
         {
             lcd_send_command(0x01);
             printf("Configurando WiFi\n");
-            printf("Conexión exitosa!\n");
+            printf("Conexion exitosa!\n");
 
             lcd_send_string("Configurando WiFi", LCD_ROW_1);
-            lcd_send_string("Conexión exitosa!", LCD_ROW_2);
+            lcd_send_string("Conexion exitosa!", LCD_ROW_2);
             vTaskSuspend(task_handler_lcd); 
         }
         else if(pagina_menu==6) // WiFi No Conectado
         {
             lcd_send_command(0x01);
             printf("Configurando WiFi\n");
-            printf("Conexión fallida!\n");
+            printf("Conexion fallida!\n");
             
             lcd_send_string("Configurando WiFi", LCD_ROW_1);
-            lcd_send_string("Conexión fallida!", LCD_ROW_2);
+            lcd_send_string("Conexion fallida!", LCD_ROW_2);
             vTaskSuspend(task_handler_lcd);   
         }
     }
