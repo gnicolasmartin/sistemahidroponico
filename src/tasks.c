@@ -252,7 +252,7 @@ void measure_habitat(void *pvParameter)
     uint8_t aux[5], i;
     while (1) 
     {
-        if(dht11_init())
+        if(dht11_start())
         {
             for(i=0;i<5;i++)
                 aux[i]=dht11_read();
@@ -262,12 +262,12 @@ void measure_habitat(void *pvParameter)
                 temperature = aux[2];
                 humidity = aux[0];
                 printf("TEMP.: %d°, HUMID.: %d \n", temperature, humidity);
+                vTaskSuspend(NULL);
             }
             else
                 printf(" --> CHECKSUM FAILED\n");
-            // vTaskSuspend(NULL);
         }
-        sleep(1);
+        usleep(5000);
     }
 }
 
