@@ -101,6 +101,9 @@ void medir_ec(void)
     
     adc_reading /= NO_OF_SAMPLES;
 
+    // 18-02-2022
+    // aux = 2044959000 + (520.3848 - 2044959000)/(1 + pow((adc_reading/13859.89),6.790912));
+    // 25-02-2022
     aux = 2001155000 + (565.3518 - 2001155000)/(1 + pow((adc_reading/638859.3),2.306259));
 
     //Convert adc_reading to voltage in mV
