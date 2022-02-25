@@ -53,14 +53,13 @@
 // PROTOTYPES
 void init_antirrebote(void);
 void gpio_init(void);
-uint8_t dht11_init(void);
+void dht11_init(void);
+uint8_t dht11_start(void);
 uint8_t dht11_check_response(void);
 void motor_sonda(int dir);
 void dispenser_ph();
 void dispenser_ec();
 uint8_t dht11_read(void);
-int get_dht11_data(int datos);
-void dht11_end(void);
 
 // STRUCTS
 typedef struct antirrebote_t{

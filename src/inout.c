@@ -89,13 +89,20 @@ void init_antirrebote(void)
     }
 }
 
-uint8_t dht11_init(void)
+void dht11_init(void)
 {
     gpio_pad_select_gpio(GPIO_SENSOR_TEMP);                 
+    gpio_set_direction(GPIO_SENSOR_TEMP,GPIO_MODE_INPUT);
+}
+
+uint8_t dht11_start(void)
+{
+    usleep(500);
+    // gpio_pad_select_gpio(GPIO_SENSOR_TEMP);                 
     gpio_set_direction(GPIO_SENSOR_TEMP,GPIO_MODE_OUTPUT);
 
-    gpio_set_level(GPIO_SENSOR_TEMP, 1);
-    usleep(4000);
+    // gpio_set_level(GPIO_SENSOR_TEMP, 1);
+    // usleep(4000);
 
     gpio_set_level(GPIO_SENSOR_TEMP, 0);
     usleep(18000);  //LS: Probé con 19000 y emperó un poco
@@ -108,12 +115,12 @@ uint8_t dht11_init(void)
 
     if(dht11_check_response())
     {
-        printf("DHT11 INIT OK\n");
+        // printf("DHT11 INIT OK\n");
         return 1;
     }
     else
     {
-        printf("DHT11 INIT FAILED\n");
+        // printf("DHT11 INIT FAILED\n");
         return 0;
     }
 }
@@ -133,7 +140,7 @@ uint8_t dht11_check_response(void)
     }
 
     Flag_response = 0;
-    for(i=0;i<80;i++)
+    for(i=0;i<100;i++)
     {
         if(!gpio_get_level(GPIO_SENSOR_TEMP))
         {
@@ -163,7 +170,7 @@ uint8_t dht11_read(void)
         }
         if(error==1)
         {
-            printf("ERROR EN LECTURA\n");
+            // printf("ERROR EN LECTURA\n");
             return 0;
         }
 
