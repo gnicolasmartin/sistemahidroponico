@@ -20,9 +20,9 @@ esp_vfs_spiffs_conf_t conf =
 };
 
 uint8_t init_ok = 0;
-bool CROP_RUNNING = false; // TEST: Volver a False
+bool CROP_RUNNING = true; // TEST: Volver a False
 bool SMOKE_TEST = false;
-int  TEST_STATE = OFF;
+int  TEST_STATE = REGULATE_WATER; // OFF
 char tipo_planta[50];
 
 bool IRRIGATION_ON= false;
@@ -64,7 +64,7 @@ void app_main()
     xTaskCreate(&regulate_water, "regulate_water", 4096, NULL, 2, &task_handler_regulate_water);
     vTaskSuspend(task_handler_regulate_water);
     xTaskCreate(&measure_habitat, "measure_habitat", 4096, NULL, 1, &task_handler_measure_habitat);
-    // vTaskSuspend(task_handler_measure_habitat);
+    vTaskSuspend(task_handler_measure_habitat);
 
     // EN DUDA SI QUEDAN O NO
     // xTaskCreate(&toggle_led, "toggle_led", 1024, NULL, 1, NULL);
@@ -98,7 +98,7 @@ void app_main()
                     PH_MAX= 90; 
                     PH_MIN= 60; 
                     EC_MAX= 2300; 
-                    EC_MIN= 1100;
+                    EC_MIN= 1700;
                     vTaskResume(task_handler_regulate_water);
                     break;
 
@@ -171,7 +171,7 @@ void app_main()
 
         
         // printf("Por dosificar ACIDULANTE\n"); 
-        // medir_ec();
+        medir_ec();
         // medir_ph();
         
         /** CONTROL TASK: DISPLAY **/

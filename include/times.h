@@ -6,5 +6,5 @@
 #define DISPLAY_INACTIVITY      300         //  5min =   300seg
 #define REGULATE_WATER_TIME_OFF 3600        //  24hs = 86400seg
 #define HABITAT_TIME_OFF        3600        //  24hs = 86400seg
-#define TIME_uSEG_FOR_1ML       60000000    //   1ml -> 60seg 
+#define TIME_uSEG_FOR_1ML       100000000    //   ????
 #define STATE_CHECK_DELAY       300         // 5 min = 300 seg (chequeo de estado en firestore)

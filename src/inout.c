@@ -202,7 +202,7 @@ void motor_sonda(int dir)
     // 100 i -> 50 pasos -> 90 grados
     gpio_set_level(DIR_BRAZO_SONDAS, dir);
 
-    while(i < 2.66*DEGREE_90_NEMA17)
+    while(i < 2*DEGREE_90_NEMA17)
     {
         if( i % 2 == 0 )
         {
