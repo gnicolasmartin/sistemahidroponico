@@ -194,7 +194,7 @@ uint8_t dht11_read(void)
         }
         if(error==1)
         {
-            printf("LECTURA NO OK\n");
+            //printf("LECTURA NO OK\n");
             return 0;
         }
     }
