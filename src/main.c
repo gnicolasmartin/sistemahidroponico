@@ -22,7 +22,7 @@ esp_vfs_spiffs_conf_t conf =
 uint8_t init_ok = 0;
 bool CROP_RUNNING = false; // TEST: Volver a False
 bool SMOKE_TEST = false;
-int  TEST_STATE = REGULATE_WATER; // OFF
+int  TEST_STATE = OFF;
 char tipo_planta[50];
 
 bool IRRIGATION_ON= false;
@@ -39,8 +39,6 @@ void app_main()
     adc_init();
     lcd_init();
     dht11_init();
-
-    
 
     /************** Variables **************/
     // Timers declaration
@@ -79,8 +77,7 @@ void app_main()
 
         // Se activa desde el menú de navegación
         if(SMOKE_TEST)
-        {
-            
+        {            
             switch (TEST_STATE)
             {
                 // -> TESTING LIGHTS
@@ -117,7 +114,7 @@ void app_main()
                     vTaskResume(task_handler_measure_habitat);
                     if(eTaskGetState(task_handler_measure_habitat) == eSuspended)
                     {
-                        // TEST_STATE= COOLERS;
+                        TEST_STATE= COOLERS;
                         vTaskResume(task_handler_lcd);
                     }
                     break;
@@ -125,9 +122,9 @@ void app_main()
                 // -> TESTING COOLERS
                 case COOLERS:
                     vTaskResume(task_handler_lcd);
-                    // gpio_set_level(GPIO_COOLERS, ON);
+                    gpio_set_level(GPIO_COOLERS_HABITAT, ON);
                     sleep(25);
-                    // gpio_set_level(GPIO_COOLERS, OFF);
+                    gpio_set_level(GPIO_COOLERS_HABITAT, OFF);
                     TEST_STATE= OFF;
                     break;
                 
@@ -169,11 +166,6 @@ void app_main()
         timer_display++;
         timer_regulate_water++;
 
-        
-        // printf("Por dosificar ACIDULANTE\n"); 
-        medir_ec();
-        // medir_ph();
-        
         /** CONTROL TASK: DISPLAY **/
         if(timer_display > DISPLAY_INACTIVITY)    // APAGADO
         {
