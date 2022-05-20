@@ -20,7 +20,7 @@ esp_vfs_spiffs_conf_t conf =
 };
 
 uint8_t init_ok = 0;
-bool CROP_RUNNING = true; // TEST: Volver a False
+bool CROP_RUNNING = false; // TEST: Volver a False
 bool SMOKE_TEST = false;
 int  TEST_STATE = REGULATE_WATER; // OFF
 char tipo_planta[50];
@@ -75,7 +75,7 @@ void app_main()
     /************** Main loop - IDLE **************/  
     while(!CROP_RUNNING)
     {
-        timer_fs_state_check++;        
+        timer_fs_state_check++;     
 
         // Se activa desde el menú de navegación
         if(SMOKE_TEST)

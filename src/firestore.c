@@ -426,7 +426,7 @@ int8_t fs_stats_actualization(char *id)
     static char tcDoc[FIRESTORE_DOC_MAX_SIZE]; 
     char temp_fs[20], hum_fs[20], ec_fs[20], ph_fs[20];
 
-    FILE* f;
+    FILE* f = fopen("/spiffs/system.json", "w"); 
 
     if(init_firestore() != FIRESTORE_OK)
     {
@@ -437,6 +437,18 @@ int8_t fs_stats_actualization(char *id)
     itoa(ph, ph_fs, 10);
     itoa(ec, ec_fs, 10);
     itoa(humidity, hum_fs, 10);
+
+    firestore_err_t FIRESTORE_STATUS = firestore_get_document(SYSTEM_COLLECTION, id, tcDoc, &u32DocLength);
+
+    // Chequeamos si hay error
+    if (f != NULL)                                   
+    {
+        // Guardamos el JSON en un archivo
+        fprintf(f, "%s", tcDoc);
+        printf("Doc leído de la base: %s",tcDoc);
+        fputc('\0', f);
+        fclose(f);
+    }
 
     int value = replace_value("/spiffs/system.json", "temperature", temp_fs);
     if(value == -1)
@@ -468,12 +480,13 @@ int8_t fs_stats_actualization(char *id)
     // Pasamos el contenido del JSON a una variable
     fread(tcDoc, FIRESTORE_DOC_MAX_SIZE, 1, f);
     u32DocLength = sizeof(tcDoc);
+    printf("Doc a escribir de la base: %s\n\n",tcDoc);
 
     // Cerramos archivo JSON de respaldo
     fclose(f);
 
     // Actualizamos el documento en firestore
-    firestore_err_t FIRESTORE_STATUS= firestore_update_document(SYSTEM_COLLECTION, id, tcDoc, &u32DocLength);
+    FIRESTORE_STATUS= firestore_update_document(SYSTEM_COLLECTION, id, tcDoc, &u32DocLength);
 
     if(FIRESTORE_STATUS != FIRESTORE_OK)
     {

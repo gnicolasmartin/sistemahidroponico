@@ -14,7 +14,7 @@
 
 uint8_t machine_state = STATE_INIT;
 TaskHandle_t task_handler_motor, task_handler_firestore, task_handler_regulate_water, task_handler_measure_habitat, task_handler_input, task_handler_menu, task_handler_lcd, task_handler_dosificador;
-uint32_t temperature=25, humidity=70, ph=3, ec=1800;
+uint32_t temperature=25, humidity=60, ph=3, ec=1800;
 
 //Variables para el manejo de menúes
 uint8_t pagina_menu= 0;

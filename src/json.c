@@ -197,7 +197,7 @@ int replace_value(char *file_name, char *key, char *value)
 
             //Escribo lo que resta del archivo
             //printf("Lo que resta del archivo es:\n%s\n", aux);
-            fwrite(aux,1,tamanio_copia,archivo);
+            fwrite(aux,1,tamanio_copia+1,archivo);
             break;
             //fprintf(archivo,"%s",aux);   
         }
