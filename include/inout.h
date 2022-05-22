@@ -16,14 +16,14 @@
 #include "esp32/rom/ets_sys.h"
 
 // DEFINES
-#define SENSOR_NIVEL_PRI        26
-#define SENSOR_NIVEL_SEC        27
+#define SENSOR_NIVEL_PRI        2
+#define SENSOR_NIVEL_SEC        2
 #define GPIO_TEST_LED           2  // LED BUILT IN
 #define CANTIDAD_ANTIRREBOTE    5
 // Pulsadores del teclado
 #define GPIO_PULSADOR_IZQUIERDO 25//35 // SETEAR EN 27 PARA HACER PRUEBAS EN PROTO (PULL UP INTENRO)
-#define GPIO_PULSADOR_DERECHO   35//25
-#define GPIO_PULSADOR_ARRIBA    32
+#define GPIO_PULSADOR_DERECHO   27//25
+#define GPIO_PULSADOR_ARRIBA    26
 #define GPIO_PULSADOR_ABAJO     33
 // COOLERS
 #define GPIO_COOLERS_LIGHT      15

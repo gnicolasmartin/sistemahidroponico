@@ -320,7 +320,7 @@ void navegar_menu(void *pvParameter)
                 opt_menu=2;
                 pagina_menu=1;
                 SMOKE_TEST= true;
-                TEST_STATE = LIGHTS;
+                TEST_STATE = REGULATE_WATER;
                 vTaskResume(task_handler_lcd);
             }
             //-->Navega de "Configuración WiFi" -> "Configuración de PWD"

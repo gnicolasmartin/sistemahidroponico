@@ -36,14 +36,14 @@
 #define OFF                     0
 
 // TEST STATES
-#define LIGHTS                  1
+#define LIGHTS                  3
 // #define PUMP                    2
 // #define SONDA_PH                3
 // #define DOSIF_PH                4
 // #define SONDA_EC                5
 // #define DOSIF_EC                6
-#define REGULATE_WATER          2
-#define DHT11                   3
+#define REGULATE_WATER          1
+#define DHT11                   2
 #define COOLERS                 4
 
 // PROTOTYPES

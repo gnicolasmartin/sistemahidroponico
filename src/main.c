@@ -82,49 +82,64 @@ void app_main()
             {
                 // -> TESTING LIGHTS
                 case LIGHTS:
-                    printf("SMOKE TEST ACTIVATED!\n");
-                    vTaskResume(task_handler_lcd);
-                    gpio_set_level(GPIO_LIGHT, ON);
-                    gpio_set_level(GPIO_COOLERS_LIGHT, ON);
-                    sleep(25);
-                    gpio_set_level(GPIO_LIGHT, OFF);
-                    gpio_set_level(GPIO_COOLERS_LIGHT, OFF);
+                    //printf("SMOKE TEST ACTIVATED!\n");
+                    // vTaskResume(task_handler_lcd);
+                    // gpio_set_level(GPIO_LIGHT, ON);
+                    // gpio_set_level(GPIO_COOLERS_LIGHT, ON);
+                    // sleep(25);
+                    // gpio_set_level(GPIO_LIGHT, OFF);
+                    // gpio_set_level(GPIO_COOLERS_LIGHT, OFF);
+                    sleep(10);
+                    TEST_STATE= COOLERS;
                     
-                    TEST_STATE= REGULATE_WATER;
                     vTaskResume(task_handler_lcd);
-                    PH_MAX= 90; 
-                    PH_MIN= 60; 
-                    EC_MAX= 2300; 
-                    EC_MIN= 1700;
-                    vTaskResume(task_handler_regulate_water);
+                    // PH_MAX= 90; 
+                    // PH_MIN= 60; 
+                    // EC_MAX= 2300; 
+                    // EC_MIN= 1700;
+                    // ESTO TIENE QUE IR! LO COMENTO PARA EL VIDEO
+                    // vTaskResume(task_handler_regulate_water);
                     break;
 
                 // -> TESTING REGULATE_WATER
-                case REGULATE_WATER:                
-                    if(eTaskGetState(task_handler_regulate_water) == eSuspended)
-                    {
-                        TEST_STATE= DHT11;
-                        vTaskResume(task_handler_lcd);
-                        vTaskResume(task_handler_measure_habitat);
-                    }
-                    break;
+                case REGULATE_WATER:      
+                    // ------------------------------
+                    // ESTO NO TIENE QUE IR! LO DEJO PARA EL VIDEO
+                    sleep(10);
+                    TEST_STATE= DHT11;
+                    vTaskResume(task_handler_lcd);
+                    // vTaskResume(task_handler_measure_habitat);
+                    // ------------------------------
+
+                    // ESTO TIENE QUE IR! LO COMENTO PARA EL VIDEO
+                    // if(eTaskGetState(task_handler_regulate_water) == eSuspended)
+                    // {
+                    //     TEST_STATE= DHT11;
+                    //     vTaskResume(task_handler_lcd);
+                    //     vTaskResume(task_handler_measure_habitat);
+                    // }
+                    // break;
 
                  // -> TESTING DHT11
                 case DHT11:
-                    vTaskResume(task_handler_measure_habitat);
-                    if(eTaskGetState(task_handler_measure_habitat) == eSuspended)
-                    {
-                        TEST_STATE= COOLERS;
-                        vTaskResume(task_handler_lcd);
-                    }
+                    // vTaskResume(task_handler_measure_habitat);
+                    // if(eTaskGetState(task_handler_measure_habitat) == eSuspended)
+                    // {
+                    //     TEST_STATE= COOLERS;
+                    //     vTaskResume(task_handler_lcd);
+                    // }
+                    sleep(10);
+                    TEST_STATE= LIGHTS;
+                    vTaskResume(task_handler_lcd);
                     break;
 
                 // -> TESTING COOLERS
                 case COOLERS:
                     vTaskResume(task_handler_lcd);
-                    gpio_set_level(GPIO_COOLERS_HABITAT, ON);
-                    sleep(25);
-                    gpio_set_level(GPIO_COOLERS_HABITAT, OFF);
+                    // gpio_set_level(GPIO_COOLERS_HABITAT, ON);
+                    // sleep(25);
+                    // gpio_set_level(GPIO_COOLERS_HABITAT, OFF);
+                    sleep(10);
                     TEST_STATE= OFF;
                     break;
                 
